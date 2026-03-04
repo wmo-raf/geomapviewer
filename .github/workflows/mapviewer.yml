@@ -36,3 +36,4 @@ jobs:
       - name: Push Docker image
         run: |
           docker push ghcr.io/wmo-raf/geomapviewer:${{ steps.version.outputs.VERSION }}
+          docker push ghcr.io/wmo-raf/geomapviewer:latest
