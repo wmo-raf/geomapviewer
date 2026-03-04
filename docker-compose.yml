@@ -15,7 +15,30 @@ services:
         - BASE_PATH=${BASE_PATH}
     ports:
       - ${PORT}:3000
+
+
+  climweb_mapviewer:
+    image: climweb_mapviewer
+    container_name: climweb_mapviewer
+    restart: unless-stopped
+    build:
+      context: ./mapviewer
+      network: host
+    environment:
+      CMS_API: ${MAPVIEWER_CMS_API}
+      BASE_PATH: ${MAPVIEWER_BASE_PATH}
+      ASSET_PREFIX: ${MAPVIEWER_ASSET_PREFIX}
+      ANALYTICS_PROPERTY_ID: ${ANALYTICS_PROPERTY_ID}
+      BITLY_TOKEN: ${BITLY_TOKEN}
+      GOOGLE_CUSTOM_SEARCH_CX: ${GOOGLE_CUSTOM_SEARCH_CX}
+      GOOGLE_SEARCH_API_KEY: ${GOOGLE_SEARCH_API_KEY}
+    volumes:
+      - ${MAPVIEWER_NEXT_STATIC_VOLUME}:/app/nginx/.next/static
+    ports:
+      - "3000:3000"
+
 networks:
     default:
       name:  ${AHW_DOCKER_NETWORK}
       external: true
+

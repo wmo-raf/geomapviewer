@@ -15,9 +15,8 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Download source
-ADD https://github.com/erick-otenyo/geomapviewer/archive/refs/heads/main.tar.gz ./
-RUN tar -xzf main.tar.gz && rm main.tar.gz
+# Copy local project
+COPY . /app/geomapviewer-main
 
 WORKDIR /app/geomapviewer-main
 
