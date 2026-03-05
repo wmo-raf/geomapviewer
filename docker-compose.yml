@@ -4,25 +4,6 @@ services:
     container_name: geomapviewer
     build:
       context: .
-      args:
-        - ANALYTICS_PROPERTY_ID=${ANALYTICS_PROPERTY_ID}
-        - BITLY_TOKEN=${BITLY_TOKEN}
-        - DEBUG= ${DEBUG}
-        - FEATURE_ENV=${FEATURE_ENV}
-        - GOOGLE_CUSTOM_SEARCH_CX=${GOOGLE_CUSTOM_SEARCH_CX}
-        - GOOGLE_SEARCH_API_KEY=${GOOGLE_SEARCH_API_KEY}
-        - CMS_API=${CMS_API}
-        - BASE_PATH=${BASE_PATH}
-    ports:
-      - ${PORT}:3000
-
-
-  climweb_mapviewer:
-    image: climweb_mapviewer
-    container_name: climweb_mapviewer
-    restart: unless-stopped
-    build:
-      context: ./mapviewer
       network: host
     environment:
       CMS_API: ${MAPVIEWER_CMS_API}
@@ -32,10 +13,8 @@ services:
       BITLY_TOKEN: ${BITLY_TOKEN}
       GOOGLE_CUSTOM_SEARCH_CX: ${GOOGLE_CUSTOM_SEARCH_CX}
       GOOGLE_SEARCH_API_KEY: ${GOOGLE_SEARCH_API_KEY}
-    volumes:
-      - ${MAPVIEWER_NEXT_STATIC_VOLUME}:/app/nginx/.next/static
     ports:
-      - "3000:3000"
+      - ${PORT}:3000
 
 networks:
     default:
