@@ -4,18 +4,20 @@ services:
     container_name: geomapviewer
     build:
       context: .
-      args:
-        - ANALYTICS_PROPERTY_ID=${ANALYTICS_PROPERTY_ID}
-        - BITLY_TOKEN=${BITLY_TOKEN}
-        - DEBUG= ${DEBUG}
-        - FEATURE_ENV=${FEATURE_ENV}
-        - GOOGLE_CUSTOM_SEARCH_CX=${GOOGLE_CUSTOM_SEARCH_CX}
-        - GOOGLE_SEARCH_API_KEY=${GOOGLE_SEARCH_API_KEY}
-        - CMS_API=${CMS_API}
-        - BASE_PATH=${BASE_PATH}
+      network: host
+    environment:
+      CMS_API: ${MAPVIEWER_CMS_API}
+      BASE_PATH: ${MAPVIEWER_BASE_PATH}
+      ASSET_PREFIX: ${MAPVIEWER_ASSET_PREFIX}
+      ANALYTICS_PROPERTY_ID: ${ANALYTICS_PROPERTY_ID}
+      BITLY_TOKEN: ${BITLY_TOKEN}
+      GOOGLE_CUSTOM_SEARCH_CX: ${GOOGLE_CUSTOM_SEARCH_CX}
+      GOOGLE_SEARCH_API_KEY: ${GOOGLE_SEARCH_API_KEY}
     ports:
       - ${PORT}:3000
+
 networks:
     default:
       name:  ${AHW_DOCKER_NETWORK}
       external: true
+
