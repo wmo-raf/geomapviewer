@@ -5,6 +5,6 @@ export function getRuntimeConfig() {
 
   // fallback for server
   return {
-    NEXT_PUBLIC_CMS_API: process.env.NEXT_PUBLIC_CMS_API,
+    CMS_API: process.env.CMS_API,
   };
 }

@@ -4,7 +4,7 @@ set -e
 
 cat <<EOF > /app/public/runtime-config.js
 window.RUNTIME_CONFIG = {
-  NEXT_PUBLIC_CMS_API: "${NEXT_PUBLIC_CMS_API}",
+  CMS_API: "${CMS_API}",
   ANALYTICS_PROPERTY_ID: "${ANALYTICS_PROPERTY_ID}",
   BASE_PATH: "${BASE_PATH}"
 };
