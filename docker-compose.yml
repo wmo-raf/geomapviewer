@@ -4,9 +4,8 @@ services:
     container_name: geomapviewer
     build:
       context: .
-      network: host
     environment:
-      CMS_API: ${MAPVIEWER_CMS_API}
+      NEXT_PUBLIC_CMS_API: ${MAPVIEWER_CMS_API}
       BASE_PATH: ${MAPVIEWER_BASE_PATH}
       ASSET_PREFIX: ${MAPVIEWER_ASSET_PREFIX}
       ANALYTICS_PROPERTY_ID: ${ANALYTICS_PROPERTY_ID}
@@ -16,8 +15,8 @@ services:
     ports:
       - ${PORT}:3000
 
-networks:
-    default:
-      name:  ${AHW_DOCKER_NETWORK}
-      external: true
+# networks:
+#     default:
+#       name:  ${AHW_DOCKER_NETWORK}
+#       external: true
 
