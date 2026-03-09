@@ -2,15 +2,12 @@
 
 set -e
 
-# Generate runtime .env file
-cat <<EOF > /app/.env
-ANALYTICS_PROPERTY_ID=${ANALYTICS_PROPERTY_ID}
-BITLY_TOKEN=${BITLY_TOKEN}
-GOOGLE_CUSTOM_SEARCH_CX=${GOOGLE_CUSTOM_SEARCH_CX}
-GOOGLE_SEARCH_API_KEY=${GOOGLE_SEARCH_API_KEY}
-BASE_PATH=${BASE_PATH}
-ASSET_PREFIX=${ASSET_PREFIX}
-CMS_API=${CMS_API}
+cat <<EOF > /app/public/runtime-config.js
+window.RUNTIME_CONFIG = {
+  NEXT_PUBLIC_CMS_API: "${NEXT_PUBLIC_CMS_API}",
+  ANALYTICS_PROPERTY_ID: "${ANALYTICS_PROPERTY_ID}",
+  BASE_PATH: "${BASE_PATH}"
+};
 EOF
 
 # copy .next files to enable connecting mounted volumes to static

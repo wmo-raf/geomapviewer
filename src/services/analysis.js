@@ -1,6 +1,7 @@
 import request from "@/utils/request";
+import { getRuntimeConfig } from "@/utils/runtime-config";
+const { NEXT_PUBLIC_CMS_API } = getRuntimeConfig();
 
-import { CMS_API } from "@/utils/apis";
 import { parseISO } from "date-fns";
 
 export const fetchRasterPixelValue = ({ layerId, lat, lng, time }) => {
@@ -11,7 +12,7 @@ export const fetchRasterPixelValue = ({ layerId, lat, lng, time }) => {
   };
 
   return request
-    .get(`${CMS_API}/raster-data/pixel/${layerId}`, { params })
+    .get(`${NEXT_PUBLIC_CMS_API}/raster-data/pixel/${layerId}`, { params })
     .then((res) => res?.data.value);
 };
 
@@ -28,7 +29,7 @@ export const fetchRasterGeostoreValue = ({
   };
 
   return request
-    .get(`${CMS_API}/raster-data/geostore/${layerId}`, { params })
+    .get(`${NEXT_PUBLIC_CMS_API}/raster-data/geostore/${layerId}`, { params })
     .then((res) => res?.data);
 };
 
@@ -45,7 +46,7 @@ export const fetchRasterPixelTimeseriesValue = ({
   };
 
   return request
-    .get(`${CMS_API}/raster-data/pixel/timeseries/${layerId}`, { params })
+    .get(`${NEXT_PUBLIC_CMS_API}/raster-data/pixel/timeseries/${layerId}`, { params })
     .then((res) => res?.data)
     .then((data) => data.sort((a, b) => parseISO(a.date) - parseISO(b.date)));
 };
@@ -63,7 +64,7 @@ export const fetchRasterGeostoreTimeseriesValue = ({
   };
 
   return request
-    .get(`${CMS_API}/raster-data/geostore/timeseries/${layerId}`, { params })
+    .get(`${NEXT_PUBLIC_CMS_API}/raster-data/geostore/timeseries/${layerId}`, { params })
     .then((res) => res?.data)
     .then((data) => data.sort((a, b) => parseISO(a.date) - parseISO(b.date)));
 };

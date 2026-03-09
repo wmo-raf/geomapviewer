@@ -1,6 +1,7 @@
 import axios from "axios";
+import { getRuntimeConfig } from "@/utils/runtime-config";
 
-import { CMS_API } from "@/utils/apis";
+const { NEXT_PUBLIC_CMS_API } = getRuntimeConfig();
 
 const isServer = typeof window === "undefined";
 
@@ -10,12 +11,12 @@ const TIMEOUT = 50 * 1000;
 
 export const apiRequest = axios.create({
   timeout: TIMEOUT,
-  baseURL: CMS_API,
+  baseURL: NEXT_PUBLIC_CMS_API,
 });
 
 export const apiAuthRequest = axios.create({
   timeout: TIMEOUT,
-  baseURL: CMS_API,
+  baseURL: NEXT_PUBLIC_CMS_API,
   headers: {
     "content-type": "application/json",
     Authorization: `Bearer ${!isServer && localStorage.getItem("userToken")}`,
