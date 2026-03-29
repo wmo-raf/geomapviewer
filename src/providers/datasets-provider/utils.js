@@ -71,13 +71,20 @@ const wmsUpdateProvider = (layer) => {
     layerName,
     autoUpdateInterval,
     currentTimeMethod,
+    multiTemporal,
+    legendConfig,
   } = layer;
+
+  const legendFromCapabilities = legendConfig?.type === "wms_capabilities";
 
   return {
     layer: layer,
-    getCurrentLayerTime: (timestamps) => {
-      return getLayerTime(timestamps, currentTimeMethod);
-    },
+    legendFromCapabilities,
+    ...(multiTemporal && {
+      getCurrentLayerTime: (timestamps) => {
+        return getLayerTime(timestamps, currentTimeMethod);
+      },
+    }),
     ...(!!autoUpdateInterval && {
       updateInterval: autoUpdateInterval,
     }),
@@ -116,9 +123,11 @@ const tileLayerUpdateProvider = (layer) => {
 
 export const createUpdateProviders = (activeLayers) => {
   const providers = activeLayers.reduce((all, layer) => {
-    const { layerType, multiTemporal } = layer;
+    const { layerType, multiTemporal, legendConfig } = layer;
 
     let provider;
+
+    const legendFromCapabilities = legendConfig?.type === "wms_capabilities";
 
     if (multiTemporal && layerType) {
       switch (layerType) {
@@ -135,6 +144,8 @@ export const createUpdateProviders = (activeLayers) => {
         default:
           break;
       }
+    } else if (!multiTemporal && layerType === "wms" && legendFromCapabilities) {
+      provider = wmsUpdateProvider(layer);
     }
 
     if (provider) {

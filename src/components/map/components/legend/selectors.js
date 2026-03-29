@@ -16,6 +16,8 @@ const selectCountryDataLoading = (state) =>
   state.countryData && state.countryData.loading;
 const selectLayerTimestamps = (state) =>
   state.datasets && state.datasets.timestamps;
+const selectLayerLegends = (state) =>
+  state.datasets && state.datasets.layerLegends;
 const getLocation = (state) => state.location && state.location.payload;
 
 export const getLoading = createSelector(
@@ -24,8 +26,8 @@ export const getLoading = createSelector(
 );
 
 const getLegendLayerGroups = createSelector(
-  [getLayerGroups, selectLayerTimestamps],
-  (groups, layerTimestamps) => {
+  [getLayerGroups, selectLayerTimestamps, selectLayerLegends],
+  (groups, layerTimestamps, layerLegends) => {
     if (!groups) return null;
 
     const lGroups = groups.filter((g) => !g.isBoundary && !g.isRecentImagery);
@@ -35,6 +37,15 @@ const getLegendLayerGroups = createSelector(
         group.layers &&
         group.layers.map((l) => {
           const timestampsForLayer = layerTimestamps[l.id];
+
+          // Override legendConfig with image from GetCapabilities
+          const legendUrl = layerLegends && layerLegends[l.id];
+          if (legendUrl && l.legendConfig?.type === "wms_capabilities") {
+            l.legendConfig = {
+              type: "image",
+              imageUrl: legendUrl,
+            };
+          }
 
           if (l.paramsSelectorConfig) {
             const paramsSelectorConfig = [...l.paramsSelectorConfig];
