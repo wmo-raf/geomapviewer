@@ -9,6 +9,7 @@ export const initialState = {
   layerUpdatingStatus: {},
   layerLoadingStatus: {},
   timestamps: {},
+  layerLegends: {},
   params: {},
   geojsonData: {},
 };
@@ -83,6 +84,11 @@ const setTimestamps = (state, { payload }) => ({
   timestamps: { ...state.timestamps, ...payload },
 });
 
+const setLayerLegend = (state, { payload }) => ({
+  ...state,
+  layerLegends: { ...state.layerLegends, ...payload },
+});
+
 const setDatasetParams = (state, { payload }) => {
   const { dataset, params } = payload;
 
@@ -120,6 +126,7 @@ export default {
   [actions.updateDatasets]: updateDatasets,
   [actions.removeDataset]: removeDataset,
   [actions.setTimestamps]: setTimestamps,
+  [actions.setLayerLegend]: setLayerLegend,
   [actions.setDatasetParams]: setDatasetParams,
   [actions.setGeojsonData]: setGeojsonData,
   [actions.setLayerUpdatingStatus]: setLayerUpdatingStatus,

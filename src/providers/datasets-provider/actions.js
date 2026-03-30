@@ -14,6 +14,7 @@ export const setLayerUpdatingStatus = createAction("setLayerUpdatingStatus");
 export const setLayerLoadingStatus = createAction("setLayerLoadingStatus");
 export const setGeojsonData = createAction("setGeojsonData");
 export const setTimestamps = createAction("setTimestamps");
+export const setLayerLegend = createAction("setLayerLegend");
 export const setDatasetParams = createAction("setDatasetParams");
 
 export const fetchDatasets = createThunkAction(

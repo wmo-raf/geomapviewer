@@ -2,7 +2,7 @@ import * as Comlink from "comlink";
 import xmldom from "xmldom";
 import WMSCapabilities from "wms-capabilities";
 import { get } from "axios";
-import { subMonths, subDays } from "date-fns";
+import { subDays } from "date-fns";
 
 import { parse, toSeconds } from "iso8601-duration";
 
@@ -28,73 +28,101 @@ function getValidTimestamps(rangeString) {
   return valid_timestamps;
 }
 
-const wmsGetLayerTimeFromCapabilities = async (
+function extractTimestamps(layer) {
+  const timeValueStr =
+    layer?.Dimension?.find((d) => d.name === "time")?.values || "";
+
+  if (!timeValueStr) {
+    return null;
+  }
+
+  const dateRange = timeValueStr.split("/");
+
+  if (dateRange.length > 1) {
+    const isoDuration = dateRange[dateRange.length - 1];
+    const durationMilliseconds = parseISO8601Duration(isoDuration);
+    const durationDays = durationMilliseconds / 8.64e7;
+
+    // if the interval is less than 24 hours, return dates for the past 2 days only
+    // to avoid the browser hanging on large time ranges
+    if (durationDays < 1) {
+      const endTime = new Date(dateRange[1]);
+      const startTime = subDays(endTime, 2);
+
+      return getValidTimestamps(
+        `${startTime.toISOString()}/${endTime.toISOString()}/${isoDuration}`
+      );
+    }
+
+    return getValidTimestamps(timeValueStr);
+  }
+
+  const timestamps = timeValueStr.split(",");
+  timestamps.sort((a, b) => new Date(a) - new Date(b));
+  return timestamps;
+}
+
+function extractLegendUrl(layer, styleName) {
+  const styles = layer?.Style || [];
+  let style;
+
+  if (styleName) {
+    const styleNameLower = styleName.toLowerCase();
+    style = styles.find((s) => s.Name?.toLowerCase() === styleNameLower);
+  }
+
+  // fall back to first style if no match or no style name specified
+  if (!style) {
+    style = styles[0];
+  }
+
+  return style?.LegendURL?.[0]?.OnlineResource || null;
+}
+
+const wmsGetLayerInfoFromCapabilities = async (
   wmsUrl,
   layerName,
+  styleName,
   params = {}
 ) => {
   try {
-    // Fetch the GetCapabilities document from the WMS server
     const response = await get(wmsUrl, {
       params: { ...params },
     });
 
-    // parse xml
     const capabilities = new WMSCapabilities(
       response.data,
       xmldom.DOMParser
     ).toJSON();
 
-    // get all layers
     const layers = capabilities?.Capability?.Layer?.Layer || [];
-
-    // find matching layer by name
     const match = layers.find((l) => l.Name === layerName) || {};
 
-    // get time values
-    const timeValueStr =
-      match?.Dimension?.find((d) => d.name === "time")?.values || [];
+    const result = {};
 
-    let dateRange = timeValueStr.split("/");
-
-    if (!!dateRange.length && dateRange.length > 1) {
-      const isoDuration = dateRange[dateRange.length - 1];
-      const durationMilliseconds = parseISO8601Duration(isoDuration);
-      const durationDays = durationMilliseconds / 8.64e7;
-
-      // if the interval is less that 24 hours, by default return dates for the past one month only.
-      // This is a quick implementation to avoid the browser hanging.
-      // In future we can implement this with web workers to show all the dates
-      if (durationDays < 1) {
-        const endTime = new Date(dateRange[1]);
-        const startTime = subDays(endTime, 2);
-
-        return getValidTimestamps(
-          `${startTime.toISOString()}/${endTime.toISOString()}/${isoDuration}`
-        );
-      }
-
-      return getValidTimestamps(timeValueStr);
+    const timestamps = extractTimestamps(match);
+    if (timestamps) {
+      result.timestamps = timestamps;
     }
 
-    const timestamps = timeValueStr.split(",");
+    if (styleName) {
+      const legendUrl = extractLegendUrl(match, styleName);
+      if (legendUrl) {
+        result.legendUrl = legendUrl;
+      }
+    }
 
-    // sort by date
-    timestamps.sort((a, b) => {
-      return new Date(a) - new Date(b);
-    });
-
-    return timestamps;
+    return result;
   } catch (error) {
     console.error(
       `Error fetching or parsing GetCapabilities document: ${error.message}`
     );
-    return [];
+    return {};
   }
 };
 
 const api = {
-  wmsGetLayerTimeFromCapabilities: wmsGetLayerTimeFromCapabilities,
+  wmsGetLayerInfoFromCapabilities,
 };
 
 Comlink.expose(api);
