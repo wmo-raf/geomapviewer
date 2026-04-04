@@ -1,5 +1,4 @@
 import { fetchUrlTimestamps } from "@/services/timestamps";
-import { getTimeValuesFromWMS } from "@/utils/wms";
 import { getNextDate, getPreviousDate } from "@/utils/time";
 
 import { POLITICAL_BOUNDARIES_DATASET } from "@/data/datasets";
