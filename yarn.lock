@@ -2359,8 +2359,10 @@
   resolved "https://registry.yarnpkg.com/@unrs/resolver-binding-win32-x64-msvc/-/resolver-binding-win32-x64-msvc-1.11.1.tgz#538b1e103bf8d9864e7b85cc96fa8d6fb6c40777"
   integrity sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g==
 
-"@wmo-raf/layer-manager@../layer-manager/":
+"@wmo-raf/layer-manager@^1.0.0":
   version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@wmo-raf/layer-manager/-/layer-manager-1.0.0.tgz#c10671e63796ffb8d4a13e9814dff52b715ba6d8"
+  integrity sha512-+vuFLVw+S259eXzhK0aWGtmDdORuZwZu3+pANIe1Hqw78e6eAOxFJpMbk6c1s1IFtqWCQNRYQJu0V1UNTL3SIw==
   dependencies:
     axios "^0.19.0"
     lodash "^4.17.15"
