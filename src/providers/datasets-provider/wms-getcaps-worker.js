@@ -2,11 +2,14 @@ import * as Comlink from "comlink";
 import xmldom from "xmldom";
 import WMSCapabilities from "wms-capabilities";
 import { get } from "axios";
-import { subDays } from "date-fns";
+import { useCache } from "@camptocamp/ogc-client/dist/shared/cache.js";
 
-import { parse, toSeconds } from "iso8601-duration";
-import {extractLegendUrl, extractTimestamps} from '@/utils/wms'
+import { extractLegendUrl, extractTimestamps } from "@/utils/wms";
 
+async function fetchCapabilities(wmsUrl, params) {
+  const response = await get(wmsUrl, { params: { ...params } });
+  return new WMSCapabilities(response.data, xmldom.DOMParser).toJSON();
+}
 
 const wmsGetLayerInfoFromCapabilities = async (
   wmsUrl,
@@ -15,14 +18,12 @@ const wmsGetLayerInfoFromCapabilities = async (
   params = {}
 ) => {
   try {
-    const response = await get(wmsUrl, {
-      params: { ...params },
-    });
-
-    const capabilities = new WMSCapabilities(
-      response.data,
-      xmldom.DOMParser
-    ).toJSON();
+    const capabilities = await useCache(
+      () => fetchCapabilities(wmsUrl, params),
+      "WMS",
+      "CAPABILITIES",
+      wmsUrl
+    );
 
     const layers = capabilities?.Capability?.Layer?.Layer || [];
     const match = layers.find((l) => l.Name === layerName) || {};
