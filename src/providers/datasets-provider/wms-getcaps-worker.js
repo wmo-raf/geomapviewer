@@ -35,11 +35,9 @@ const wmsGetLayerInfoFromCapabilities = async (
       result.timestamps = timestamps;
     }
 
-    if (styleName) {
-      const legendUrl = extractLegendUrl(match, styleName);
-      if (legendUrl) {
-        result.legendUrl = legendUrl;
-      }
+    const legendUrl = extractLegendUrl(match, styleName);
+    if (legendUrl) {
+      result.legendUrl = legendUrl;
     }
 
     return result;
