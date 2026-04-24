@@ -317,15 +317,22 @@ class MapComponent extends Component {
   loadMapImages = async () => {
     const { vectorLayerIcons } = this.props;
 
-    if (vectorLayerIcons && !!vectorLayerIcons.length && this.map) {
-      vectorLayerIcons.forEach((icon) => {
-        this.map.loadImage(icon.url, (error, iconImage) => {
-          if (!error && iconImage) {
-            this.map.addImage(icon.name, iconImage);
+    if (!vectorLayerIcons || !vectorLayerIcons.length || !this.map) return;
+
+    await Promise.all(
+      vectorLayerIcons.map(async (icon) => {
+        try {
+          const response = await this.map.loadImage(icon.url);
+          const image = response?.data || response;
+          if (image && !this.map.hasImage(icon.name)) {
+            this.map.addImage(icon.name, image);
           }
-        });
-      });
-    }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn(`Failed to load map image ${icon.name}:`, err);
+        }
+      })
+    );
   };
 
   fitMapBoundaryBounds = () => {

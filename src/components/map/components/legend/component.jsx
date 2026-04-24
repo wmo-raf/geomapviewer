@@ -409,24 +409,36 @@ class MapLegendCompare extends Component {
   }
 }
 
-const MapLegend = ({ layerGroups, loading, className, comparing, ...rest }) => {
+const MapLegend = ({
+  layerGroups,
+  loading,
+  className,
+  comparing,
+  maxHeight = 300,
+  LegendItemToolbar: LegendItemToolbarNode = <LegendItemToolbar />,
+  LegendItemTypes: LegendItemTypesNode = <LegendItemTypes />,
+  ...rest
+}) => {
+  const sharedProps = {
+    maxHeight,
+    LegendItemToolbar: LegendItemToolbarNode,
+    LegendItemTypes: LegendItemTypesNode,
+    ...rest,
+  };
+
   return (
     <div className={cx("c-legend", className)}>
       {loading && <Loader className="datasets-loader" />}
 
-      {comparing && <MapLegendCompare layerGroups={layerGroups} {...rest} />}
+      {comparing && (
+        <MapLegendCompare layerGroups={layerGroups} {...sharedProps} />
+      )}
 
       {!comparing && !loading && (
-        <MapLegendContent layerGroups={layerGroups} {...rest} />
+        <MapLegendContent layerGroups={layerGroups} {...sharedProps} />
       )}
     </div>
   );
-};
-
-MapLegend.defaultProps = {
-  maxHeight: 300,
-  LegendItemToolbar: <LegendItemToolbar />,
-  LegendItemTypes: <LegendItemTypes />,
 };
 
 MapLegend.propTypes = {

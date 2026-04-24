@@ -63,7 +63,7 @@
     "lodash": "^4.17.21",
     "lottie-web": "^5.10.2",
     "mapbox-gl-draw-rectangle-mode": "^1.0.4",
-    "maplibre-gl": "^2.4.0",
+    "maplibre-gl": "^5.24.0",
     "moment": "^2.29.4",
     "next": "^13.4.12",
     "next-optimized-images": "^2.6.2",

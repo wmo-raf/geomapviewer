@@ -6,7 +6,14 @@ import { splitSVGText } from './utils';
 
 import './styles.scss';
 
-function SankeyNode({ x, y, height, index, payload, config }) {
+function SankeyNode({
+  x = 0,
+  y = 0,
+  height = 20,
+  index = 0,
+  payload = {},
+  config = {},
+}) {
   const width = config.nodeWidth || 140;
   const isEndNode = x > width;
   const padding = config.padding || 10;
@@ -117,15 +124,6 @@ SankeyNode.propTypes = {
     textHeight: PropTypes.number,
     tspanLineHeight: PropTypes.number,
   }),
-};
-
-SankeyNode.defaultProps = {
-  x: 0,
-  y: 0,
-  height: 20,
-  index: 0,
-  payload: {},
-  config: {},
 };
 
 export default SankeyNode;

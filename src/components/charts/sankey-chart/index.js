@@ -13,16 +13,16 @@ import SankeyNode from "./sankey-node";
 import styles from "./styles.scss";
 
 function SankeyChart({
-  width,
-  height,
-  nodeWidth,
-  nodePadding,
-  containerWidth,
-  data,
-  config,
-  customLink,
-  customNode,
-  margin,
+  width = 960,
+  height = 500,
+  nodeWidth = 140,
+  nodePadding = 10,
+  containerWidth = 800,
+  data = {},
+  config = {},
+  customLink = null,
+  customNode = null,
+  margin = { top: 10 },
   handleMouseOver,
   handleMouseLeave,
   handleOnClick,
@@ -152,19 +152,6 @@ SankeyChart.propTypes = {
   handleMouseLeave: PropTypes.func,
   handleOnClick: PropTypes.func,
   handleOutsideClick: PropTypes.func,
-};
-
-SankeyChart.defaultProps = {
-  width: 960,
-  height: 500,
-  data: {},
-  nodeWidth: 140,
-  nodePadding: 10,
-  containerWidth: 800,
-  config: {},
-  customLink: null,
-  customNode: null,
-  margin: { top: 10 },
 };
 
 export default SankeyChart;

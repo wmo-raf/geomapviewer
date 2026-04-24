@@ -9,6 +9,7 @@ import isEmpty from "lodash/isEmpty";
 
 import { trackEvent } from "@/utils/analytics";
 import reducerRegistry from "@/redux/registry";
+import "@/utils/maplibre-compat";
 
 import "@/styles/styles.scss";
 

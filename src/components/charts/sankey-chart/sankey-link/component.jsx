@@ -4,14 +4,14 @@ import { PropTypes } from 'prop-types';
 import './styles.scss';
 
 function SankeyLink({
-  sourceX,
-  sourceY,
-  sourceControlX,
-  targetX,
-  targetY,
-  targetControlX,
-  linkWidth,
-  config,
+  sourceX = null,
+  sourceY = null,
+  sourceControlX = null,
+  targetX = null,
+  targetY = null,
+  targetControlX = null,
+  linkWidth = null,
+  config = null,
   payload
 }) {
   const minLinkWidth = 2;
@@ -43,17 +43,6 @@ SankeyLink.propTypes = {
   linkWidth: PropTypes.number,
   config: PropTypes.object,
   payload: PropTypes.object
-};
-
-SankeyLink.defaultProps = {
-  sourceX: null,
-  targetX: null,
-  sourceY: null,
-  targetY: null,
-  sourceControlX: null,
-  targetControlX: null,
-  linkWidth: null,
-  config: null
 };
 
 export default SankeyLink;
