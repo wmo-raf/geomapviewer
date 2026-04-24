@@ -42,6 +42,9 @@ const datasets = [
           },
           canClipToGeom: true,
         },
+        interactionConfig: {
+          type: "wmsGetFeatureInfo",
+        },
         legendConfig: {
           type: "gradient",
           items: [
