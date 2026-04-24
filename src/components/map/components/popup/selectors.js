@@ -36,6 +36,8 @@ export const getInteractionWithContext = createSelector(
 
     const isArticle = !!layer?.interactionConfig?.article;
     const isCapAlert = !!layer?.interactionConfig?.capAlert;
+    const isWmsFeatureInfo =
+      layer?.interactionConfig?.type === "wmsGetFeatureInfo";
     const isBoundary = layer?.isBoundary;
     const isPoint = geometry?.type === "Point";
     const isLayer = !!layer;
@@ -48,6 +50,7 @@ export const getInteractionWithContext = createSelector(
       isPoint,
       isLayer,
       isCapAlert,
+      isWmsFeatureInfo,
     };
   }
 );

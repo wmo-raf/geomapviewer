@@ -104,6 +104,30 @@ const setMapInteractions = (state, { payload }) => {
   };
 };
 
+const addMapInteraction = (state, { payload }) => {
+  if (!payload || !payload.id || !payload.interaction) return state;
+
+  return {
+    ...state,
+    data: {
+      ...state.data,
+      interactions: {
+        ...state.data.interactions,
+        interactions: {
+          ...state.data.interactions.interactions,
+          [payload.id]: payload.interaction,
+        },
+        ...(payload.lngLat && {
+          latlng: {
+            lat: payload.lngLat[1] ?? payload.lngLat.lat,
+            lng: payload.lngLat[0] ?? payload.lngLat.lng,
+          },
+        }),
+      },
+    },
+  };
+};
+
 const setMapInteractionSelected = (state, { payload }) => ({
   ...state,
   data: {
@@ -167,6 +191,7 @@ export default {
   [actions.setMapLoading]: setMapLoading,
   [actions.setMapSettings]: setMapSettings,
   [actions.setMapInteractions]: setMapInteractions,
+  [actions.addMapInteraction]: addMapInteraction,
   [actions.setMapInteractionSelected]: setMapInteractionSelected,
   [actions.clearMapInteractions]: clearMapInteractions,
   [actions.setMapHoverInteraction]: setMapHoverInteraction,

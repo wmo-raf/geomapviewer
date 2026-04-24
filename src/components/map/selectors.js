@@ -695,9 +695,10 @@ export const getInteractions = createSelector(
     const interactiveLayers = activeLayers.filter(
       (l) =>
         !isEmpty(l.interactionConfig) &&
-        l.layerConfig &&
-        l.layerConfig.render &&
-        l.layerConfig.render.layers
+        ((l.layerConfig &&
+          l.layerConfig.render &&
+          l.layerConfig.render.layers) ||
+          l.interactionConfig.type === "wmsGetFeatureInfo")
     );
 
     return Object.keys(interactions).reduce((all, layerId) => {
@@ -792,6 +793,7 @@ export const getMapProps = createStructuredSelector({
   interaction: getInteractionSelected,
   interactiveLayerIds: getInteractiveLayerIds,
   hoverableLayerIds: getHoverableLayerIds,
+  activeLayers: getActiveLayers,
   basemap: getBasemap,
   lang: getActiveMapLang,
   location: selectLocation,
