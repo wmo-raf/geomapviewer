@@ -219,6 +219,11 @@ const MapLegendContent = ({
 
                   const { autoUpdateActive = true } = settings;
 
+                  // `paramConfig.key` is a domain field ("time", "height", ...).
+                  // Strip it before spreading so it doesn't collide with React's
+                  // special `key` prop.
+                  const { key: paramKey, ...paramConfigRest } = paramConfig;
+
                   //datetime selector
                   if (
                     paramConfig.type === "datetime" &&
@@ -228,17 +233,17 @@ const MapLegendContent = ({
                   ) {
                     return (
                       <DateTimeSelector
-                        key={`${activeLayer.name}-${paramConfig.key}`}
+                        key={`${activeLayer.name}-${paramKey}`}
                         name={name}
                         className="param-selector"
-                        {...paramConfig}
+                        {...paramConfigRest}
                         availableDates={paramConfig.availableDates}
                         selectedTime={
-                          params[paramConfig.key] || paramConfig.default
+                          params[paramKey] || paramConfig.default
                         }
                         onChange={(value) => {
                           onChangeParam(activeLayer, {
-                            [paramConfig.key]: value,
+                            [paramKey]: value,
                           });
                         }}
                         autoUpdate={Boolean(autoUpdateInterval)}
@@ -255,11 +260,11 @@ const MapLegendContent = ({
                   if (paramConfig.options) {
                     return (
                       <SentenceSelector
-                        key={`${activeLayer.name}-${paramConfig.key}`}
+                        key={`${activeLayer.name}-${paramKey}`}
                         name={name}
                         className="param-selector"
-                        {...paramConfig}
-                        value={params[paramConfig.key] || paramConfig.default}
+                        {...paramConfigRest}
+                        value={params[paramKey] || paramConfig.default}
                         columnView={paramsSelectorColumnView}
                         onChange={(value) => {
                           const selectedOption = paramConfig.options.find(
@@ -268,7 +273,7 @@ const MapLegendContent = ({
                           onChangeParam(
                             activeLayer,
                             {
-                              [paramConfig.key]: value,
+                              [paramKey]: value,
                             },
                             selectedOption
                           );
@@ -300,20 +305,21 @@ const MapLegendContent = ({
               layerFilterParamsConfig &&
               layerFilterParamsConfig.map((filterParam) => {
                 if (filterParam.options) {
+                  const { key: filterKey, ...filterParamRest } = filterParam;
                   return (
                     <LayerFilterSelector
-                      key={`${activeLayer.name}-${filterParam.key}`}
+                      key={`${activeLayer.name}-${filterKey}`}
                       uiType={filterParam}
                       name={name}
                       className="param-selector"
-                      {...filterParam}
+                      {...filterParamRest}
                       value={
-                        layerFilterParams[filterParam.key] ||
+                        layerFilterParams[filterKey] ||
                         filterParam.default
                       }
                       onChange={(e) =>
                         onChangeFilterParam(activeLayer, {
-                          [filterParam.key]: e,
+                          [filterKey]: e,
                         })
                       }
                     />
