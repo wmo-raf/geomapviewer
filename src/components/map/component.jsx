@@ -6,6 +6,7 @@ import debounce from "lodash/debounce";
 import cx from "classnames";
 import maplibregl from "maplibre-gl";
 import { Protocol as PmtilesProtocol } from "pmtiles";
+import { cogProtocol } from "@geomatico/maplibre-cog-protocol";
 
 import { trackMapLatLon, trackEvent } from "@/utils/analytics";
 
@@ -387,6 +388,12 @@ class MapComponent extends Component {
       const protocol = new PmtilesProtocol();
       maplibregl.addProtocol("pmtiles", protocol.tile);
       MapComponent._pmtilesRegistered = true;
+    }
+
+    // Register COG protocol once
+    if (!MapComponent._cogRegistered) {
+      maplibregl.addProtocol("cog", cogProtocol);
+      MapComponent._cogRegistered = true;
     }
 
     // remove any if existing

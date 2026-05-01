@@ -32,6 +32,7 @@ const selectLayersLoadingStatus = (state) =>
   state.datasets && state.datasets.layerLoadingStatus;
 
 const selectDatasetParams = (state) => state.datasets?.params;
+const selectCogUrls = (state) => state.datasets?.cogUrls || {};
 const selectMapPrinting = (state) => state.map && state.map?.settings?.printing;
 const getMainMapSettings = (state) => state.mainMap || {};
 export const getBasemaps = (state) => state.config?.basemaps || {};
@@ -476,9 +477,58 @@ export const getLayersWithSettingsParams = createSelector(
   }
 );
 
+// Rewrite raster_cog layers to use a `cog://` raster source for the current
+// selected time. Coloring is handled client-side by setColorFunction, so the
+// render layer stays a vanilla raster layer with no special paint.
+export const getLayersWithCogSource = createSelector(
+  [getLayersWithSettingsParams, selectCogUrls],
+  (layers, cogUrls) => {
+    if (isEmpty(layers)) return layers;
+
+    return layers.map((l) => {
+      if (l.layerType !== "raster_cog") return l;
+
+      const urlsMap = cogUrls[l.id] || {};
+      const selectedTime = l?.params?.time;
+      const cogUrl =
+        (selectedTime && urlsMap[selectedTime]) ||
+        Object.values(urlsMap)[0] ||
+        null;
+
+      // Always hand layer-manager a valid `type: "raster"` source. The backend
+      // emits `source.type: "cog"`, which maplibre would reject. Until the
+      // TileJSON fetch resolves, emit an empty tiles array so layer-manager
+      // can add the (inert) source; once a cogUrl lands, this selector
+      // recomputes and layer-manager swaps in the real `cog://...` source.
+      const source = cogUrl
+        ? {
+            type: "raster",
+            url: `cog://${cogUrl}`,
+            tileSize: 256,
+            parse: false,
+          }
+        : {
+            type: "raster",
+            tiles: [],
+            tileSize: 256,
+            parse: false,
+          };
+
+      return {
+        ...l,
+        layerConfig: {
+          ...l.layerConfig,
+          type: "raster",
+          source,
+        },
+      };
+    });
+  }
+);
+
 // flatten datasets into layers for the layer manager
 export const getAllLayers = createSelector(
-  getLayersWithSettingsParams,
+  getLayersWithCogSource,
   (layers) => {
     if (isEmpty(layers)) return null;
 
