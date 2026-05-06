@@ -4,6 +4,8 @@ import isEqual from "lodash/isEqual";
 import isEmpty from "lodash/isEmpty";
 import debounce from "lodash/debounce";
 import cx from "classnames";
+import maplibregl from "maplibre-gl";
+import { Protocol as PmtilesProtocol } from "pmtiles";
 
 import { trackMapLatLon, trackEvent } from "@/utils/analytics";
 
@@ -372,6 +374,13 @@ class MapComponent extends Component {
 
   onLoad = ({ map, mapContainer }, mapSide) => {
     const { setMapSettings } = this.props;
+
+    // Register PMTiles protocol once
+    if (!MapComponent._pmtilesRegistered) {
+      const protocol = new PmtilesProtocol();
+      maplibregl.addProtocol("pmtiles", protocol.tile);
+      MapComponent._pmtilesRegistered = true;
+    }
 
     // remove any if existing
     if (this.state.compareMap) {
