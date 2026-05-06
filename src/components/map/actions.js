@@ -3,6 +3,7 @@ import { createAction } from "@/redux/actions";
 export const setMapLoading = createAction("setMapLoading");
 export const setMapSettings = createAction("setMapSettings");
 export const setMapInteractions = createAction("setMapInteractions");
+export const addMapInteraction = createAction("addMapInteraction");
 export const setMapInteractionSelected = createAction(
   "setMapInteractionSelected"
 );
