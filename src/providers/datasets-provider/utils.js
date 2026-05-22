@@ -1,4 +1,5 @@
 import { fetchUrlTimestamps } from "@/services/timestamps";
+import { fetchTileJson } from "@/services/raster-cog";
 import { getNextDate, getPreviousDate } from "@/utils/time";
 
 import { POLITICAL_BOUNDARIES_DATASET } from "@/data/datasets";
@@ -53,6 +54,29 @@ const rasterFileUpdateProvider = (layer) => {
         }
       );
     },
+    getCurrentLayerTime: (timestamps) => {
+      return getLayerTime(timestamps, currentTimeMethod);
+    },
+    ...(!!autoUpdateInterval &&
+      autoUpdateActive && {
+        updateInterval: autoUpdateInterval,
+      }),
+  };
+};
+
+const rasterCogUpdateProvider = (layer) => {
+  const {
+    currentTimeMethod,
+    autoUpdateInterval,
+    settings = {},
+    tileJsonUrl,
+  } = layer;
+
+  const { autoUpdateActive = true } = settings;
+
+  return {
+    layer,
+    getTileJson: () => fetchTileJson(tileJsonUrl),
     getCurrentLayerTime: (timestamps) => {
       return getLayerTime(timestamps, currentTimeMethod);
     },
@@ -133,6 +157,9 @@ export const createUpdateProviders = (activeLayers) => {
         case "raster_file":
           provider = rasterFileUpdateProvider(layer);
           break;
+        case "raster_cog":
+          provider = rasterCogUpdateProvider(layer);
+          break;
         case "wms":
           provider = wmsUpdateProvider(layer);
           break;
@@ -143,6 +170,8 @@ export const createUpdateProviders = (activeLayers) => {
         default:
           break;
       }
+    } else if (!multiTemporal && layerType === "raster_cog") {
+      provider = rasterCogUpdateProvider(layer);
     } else if (!multiTemporal && layerType === "wms" && legendFromCapabilities) {
       provider = wmsUpdateProvider(layer);
     }

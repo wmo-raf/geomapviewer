@@ -6,7 +6,7 @@ import Button from '@/components/ui/button';
 
 import './styles.scss';
 
-const RefreshButton = ({ refetchFn }) => (
+const RefreshButton = ({ refetchFn = () => {} }) => (
   <NoContent className="c-refresh-button">
     <span>An error occured while fetching data. You can try again, or save the shape and check back tomorrow.</span>
     <Button
@@ -21,10 +21,6 @@ const RefreshButton = ({ refetchFn }) => (
 
 RefreshButton.propTypes = {
   refetchFn: PropTypes.func
-};
-
-RefreshButton.defaultProps = {
-  refetchFn: () => {}
 };
 
 export default RefreshButton;

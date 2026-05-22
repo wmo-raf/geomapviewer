@@ -5,7 +5,7 @@ import satellite from "@/assets/icons/satellite.png";
 
 import "./styles.scss";
 
-const NoContent = ({ className, message, icon, children }) => (
+const NoContent = ({ className, message, icon = false, children }) => (
   <div className={`c-no-content ${className}`}>
     <p className="message">
       {children || message}
@@ -19,10 +19,6 @@ NoContent.propTypes = {
   className: PropTypes.string,
   message: PropTypes.string,
   children: PropTypes.node,
-};
-
-NoContent.defaultProps = {
-  icon: false,
 };
 
 export default NoContent;

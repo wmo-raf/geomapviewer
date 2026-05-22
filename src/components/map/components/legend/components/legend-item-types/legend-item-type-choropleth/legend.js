@@ -184,7 +184,12 @@ function createLegend(
   return svg.node();
 }
 
-export default function Legend({ type, thresholds, colors, ...rest }) {
+export default function Legend({
+  type = "choropleth",
+  thresholds,
+  colors,
+  ...rest
+}) {
   if (!thresholds.length) {
     return null;
   }
@@ -206,6 +211,3 @@ export default function Legend({ type, thresholds, colors, ...rest }) {
   );
 }
 
-Legend.defaultProps = {
-  type: "choropleth",
-};
