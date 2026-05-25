@@ -55,6 +55,111 @@ $map-header-height: 50px;
     margin: 0 5px;
   }
 
+  .map-header__nav-wrapper {
+    flex: 0 0 auto;
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    margin-right: rem(12px);
+  }
+
+  .map-header__burger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: rem(6px);
+    border-radius: rem(2px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover,
+    &:focus {
+      background-color: $grey-light;
+      outline: none;
+    }
+
+    @media screen and (min-width: $screen-l) {
+      display: none;
+    }
+  }
+
+  .map-header__burger-icon {
+    width: rem(20px);
+    height: rem(20px);
+    fill: $slate;
+  }
+
+  .map-header__nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    @media screen and (max-width: ($screen-l - 0.0625rem)) {
+      position: absolute;
+      top: calc(100% + #{rem(4px)});
+      left: 0;
+      min-width: rem(200px);
+      background: $white;
+      border: 1px solid $border-color-2;
+      border-radius: rem(4px);
+      box-shadow: $pop-box-shadow;
+      padding: rem(4px) 0;
+      z-index: 11;
+      display: none;
+
+      &.open {
+        display: block;
+      }
+    }
+
+    @media screen and (min-width: $screen-l) {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+  }
+
+  .map-header__nav-item {
+    @media screen and (min-width: $screen-l) {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+  }
+
+  .map-header__nav-link {
+    display: block;
+    padding: rem(8px) rem(12px);
+    color: $slate;
+    font-size: $font-size-s;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    line-height: 1;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover,
+    &:focus {
+      background-color: $grey-light;
+      color: $slate-dark;
+      outline: none;
+      text-decoration: none;
+    }
+
+    @media screen and (min-width: $screen-l) {
+      padding: 0 rem(10px);
+      margin: 0 rem(2px);
+
+      &:hover,
+      &:focus {
+        background-color: transparent;
+        color: $primary-color;
+      }
+    }
+  }
+
   .map-header__search {
     flex: 1 1 auto;
     display: flex;
