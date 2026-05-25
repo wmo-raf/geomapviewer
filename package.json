@@ -131,7 +131,7 @@
   "devDependencies": {
     "eslint": "8.37.0",
     "eslint-config-next": "13.2.4",
-    "sass": "^1.77.8"
+    "sass": "1.77.8"
   },
   "resolutions": {
     "quick-lru": "6.1.2",
@@ -142,7 +142,8 @@
     "prop-types": "15.8.1",
     "@mapbox/mapbox-gl-draw": "1.4.1",
     "minimatch": "9.0.5",
-    "axios": "0.21.1"
+    "axios": "0.21.1",
+    "sass": "1.77.8"
   },
   "overrides": {
     "quick-lru": "6.1.2",
