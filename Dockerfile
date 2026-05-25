@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:20-bullseye-slim AS builder
+FROM node:16.16.0-bullseye-slim AS builder
 
 RUN apt-get update && \
     apt-get install -y \
@@ -47,7 +47,7 @@ RUN yarn install
 RUN yarn build
 
 # Stage 2: run
-FROM node:20-bullseye-slim
+FROM node:16.16.0-bullseye-slim
 WORKDIR /app
 COPY --from=builder /app/geomapviewer-main/.next ./.next
 COPY --from=builder /app/geomapviewer-main/public ./public
