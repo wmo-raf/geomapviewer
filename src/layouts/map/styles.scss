@@ -3,6 +3,7 @@
 .c-map-main {
   height: 100%;
   padding-top: 50px;
+  position: relative;
 
   .main-map-container {
     width: 100%;
@@ -73,8 +74,10 @@
 
   &.embed {
     height: 100%;
+    padding-top: 0;
 
     .main-map-container {
+      height: 100%;
       width: 100%;
 
       @media screen and (min-width: $screen-m) {

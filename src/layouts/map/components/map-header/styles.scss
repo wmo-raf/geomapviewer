@@ -1,0 +1,75 @@
+@import "@/styles/settings.scss";
+
+$map-header-height: 50px;
+
+.c-map-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: $map-header-height;
+  z-index: 10;
+  background: $white;
+  border-bottom: 1px solid $border;
+  box-shadow: 0 1px 4px rgba($slate, 0.08);
+
+  .navbar {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 0 rem(12px);
+    margin: 0;
+    background: transparent;
+    min-height: 0;
+  }
+
+  .map-header__brand {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 10px;
+    margin: 0 5px;
+    margin-right: rem(16px);
+
+    @media screen and (min-width: $screen-m) {
+      min-width: rem(180px);
+      max-width: rem(280px);
+    }
+  }
+
+  .map-header__logo {
+    display: block;
+    height: 100%;
+    padding: rem(4px) 0;
+    line-height: 0;
+  }
+
+  .map-header__logo-image {
+    height: 100%;
+    max-height: calc(#{$map-header-height} - #{rem(10px)});
+    width: auto;
+    object-fit: contain;
+    padding: 0 10px;
+    margin: 0 5px;
+  }
+
+  .map-header__search {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .map-header__actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+
+    @media screen and (min-width: $screen-m) {
+      min-width: rem(180px);
+      justify-content: flex-end;
+    }
+  }
+}
