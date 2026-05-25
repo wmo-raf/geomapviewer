@@ -14,6 +14,7 @@ import defaultIcon from "@/assets/icons/layers.svg?sprite";
 import food_security from "@/assets/icons/famine.svg?sprite";
 import alert from "@/assets/icons/alert.svg?sprite";
 import satellite from "@/assets/icons/satellite.svg?sprite";
+import warning from "@/assets/icons/warning.svg?sprite";
 
 export default {
   rainfall,
@@ -32,4 +33,5 @@ export default {
   waterdrop,
   alert,
   satellite,
+  warning
 };

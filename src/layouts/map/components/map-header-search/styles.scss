@@ -155,6 +155,29 @@
     letter-spacing: 0.04em;
   }
 
+  .dropdown-dataset {
+    padding: rem(8px) rem(12px);
+    transition: background-color 0.1s ease;
+
+    & + .dropdown-dataset {
+      border-top: 1px solid $border;
+    }
+
+    &:hover {
+      background-color: $grey-light;
+    }
+  }
+
+  .dropdown-dataset__toggle {
+    width: 100%;
+
+    .name,
+    .subtitle {
+      cursor: default;
+      pointer-events: none;
+    }
+  }
+
   .dropdown-empty {
     padding: rem(12px);
     font-size: $font-size-s;

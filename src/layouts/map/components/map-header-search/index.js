@@ -4,6 +4,7 @@ import sortBy from "lodash/sortBy";
 
 import { handleClickLocation } from "@/components/map-menu/actions";
 import { setMapSettings } from "@/components/map/actions";
+import { setModalMetaSettings } from "@/components/modals/meta/actions";
 import { getActiveDatasetsFromState } from "@/components/map/selectors";
 import { selectActiveLang, translateText } from "@/utils/lang";
 
@@ -41,21 +42,20 @@ const mergeProps = (stateProps, dispatchProps, ownProps) => {
     ...ownProps,
     ...restState,
     handleClickLocation: (loc) => dispatch(handleClickLocation(loc)),
-    onToggleDataset: (dataset) => {
-      const enable = !dataset.active;
+    onToggleDataset: ({ dataset, layer }, enable) => {
       const current = activeDatasets || [];
 
       const next = enable
         ? [
             {
-              dataset: dataset.id,
+              dataset,
               opacity: 1,
               visibility: true,
-              layers: [dataset.layer],
+              layers: [layer],
             },
-            ...current.filter((l) => l.dataset !== dataset.id),
+            ...current.filter((l) => l.dataset !== dataset),
           ]
-        : current.filter((l) => l.dataset !== dataset.id);
+        : current.filter((l) => l.dataset !== dataset);
 
       dispatch(
         setMapSettings({
@@ -64,6 +64,7 @@ const mergeProps = (stateProps, dispatchProps, ownProps) => {
         })
       );
     },
+    onInfoClick: (metadata) => dispatch(setModalMetaSettings(metadata)),
   };
 };
 

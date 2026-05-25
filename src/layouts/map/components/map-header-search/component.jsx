@@ -4,6 +4,7 @@ import cx from "classnames";
 import debounce from "lodash/debounce";
 
 import Icon from "@/components/ui/icon";
+import LayerToggle from "@/components/map/components/legend/components/layer-toggle";
 import { deburrUpper } from "@/utils/strings";
 import { fetchGeocodeNominatim } from "@/services/geocoding";
 import { cancelToken } from "@/utils/request";
@@ -11,7 +12,6 @@ import { cancelToken } from "@/utils/request";
 import searchIcon from "@/assets/icons/search.svg?sprite";
 import closeIcon from "@/assets/icons/close.svg?sprite";
 import locationIcon from "@/assets/icons/location.svg?sprite";
-import layersIcon from "@/assets/icons/layers.svg?sprite";
 
 import "./styles.scss";
 
@@ -97,11 +97,6 @@ class MapHeaderSearch extends Component {
     this.setState({ open: false });
   };
 
-  handleClickDataset = (dataset) => {
-    this.props.onToggleDataset(dataset);
-    this.setState({ open: false });
-  };
-
   getFilteredDatasets() {
     const { datasets } = this.props;
     const { query } = this.state;
@@ -158,20 +153,18 @@ class MapHeaderSearch extends Component {
             <div className="dropdown-section__title">Add map data</div>
             <ul className="dropdown-list">
               {filteredDatasets.map((d) => (
-                <li key={d.id}>
-                  <button
-                    type="button"
-                    className={cx("dropdown-item", { active: d.active })}
-                    onClick={() => this.handleClickDataset(d)}
-                  >
-                    <Icon icon={layersIcon} className="dropdown-item__icon" />
-                    <span className="dropdown-item__label">
-                      {d.localeName || d.name}
-                    </span>
-                    {d.active && (
-                      <span className="dropdown-item__hint">on map</span>
-                    )}
-                  </button>
+                <li key={d.id} className="dropdown-dataset">
+                  <LayerToggle
+                    className="dropdown-dataset__toggle"
+                    data={{
+                      ...d,
+                      name: d.localeName || d.name,
+                      dataset: d.id,
+                    }}
+                    onToggle={this.props.onToggleDataset}
+                    onInfoClick={this.props.onInfoClick}
+                    showSubtitle
+                  />
                 </li>
               ))}
             </ul>
@@ -226,6 +219,7 @@ MapHeaderSearch.propTypes = {
   lang: PropTypes.string,
   handleClickLocation: PropTypes.func.isRequired,
   onToggleDataset: PropTypes.func.isRequired,
+  onInfoClick: PropTypes.func.isRequired,
 };
 
 MapHeaderSearch.defaultProps = {
