@@ -2,6 +2,7 @@ import React, {PureComponent} from 'react'
 import PropTypes from 'prop-types'
 
 import MapHeaderSearch from '@/layouts/map/components/map-header-search'
+import MapHeaderUser from '@/layouts/map/components/map-header-user'
 
 import './styles.scss'
 
@@ -47,7 +48,9 @@ class MapHeader extends PureComponent {
           <div className="map-header__search">
             <MapHeaderSearch/>
           </div>
-          <div className="map-header__actions"/>
+          <div className="map-header__actions">
+            <MapHeaderUser/>
+          </div>
         </nav>
       </header>
     )

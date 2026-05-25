@@ -1,0 +1,159 @@
+@import "@/styles/settings.scss";
+
+$avatar-size: 32px;
+
+.c-map-header-user {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  font-family: $font-family-1;
+}
+
+.map-header-user__login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: rem(32px);
+  padding: 0 rem(14px);
+  background-color: $slate-dark;
+  color: $white;
+  font-size: $font-size-s;
+  border: none;
+  cursor: pointer;
+  text-transform: capitalize;
+  transition: background-color 0.15s ease;
+
+  &:hover,
+  &:focus {
+    background-color: $slate-light;
+    outline: none;
+  }
+}
+
+.map-header-user__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: rem(8px);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: rem(4px) rem(4px) rem(4px) rem(10px);
+  border-radius: rem(20px);
+  color: $slate-dark;
+  font-size: $font-size-s;
+  transition: background-color 0.15s ease;
+
+  &:hover,
+  &:focus {
+    background-color: $grey-light;
+    outline: none;
+  }
+
+  .c-map-header-user.open & {
+    background-color: $grey-light;
+  }
+}
+
+.map-header-user__name {
+  max-width: rem(160px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: $font-weight-regular;
+
+  @media screen and (max-width: $screen-m) {
+    display: none;
+  }
+}
+
+.map-header-user__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: rem($avatar-size);
+  height: rem($avatar-size);
+  border-radius: 50%;
+  background-color: $primary-color;
+  color: $white;
+  flex-shrink: 0;
+}
+
+.map-header-user__avatar-icon {
+  width: rem(16px);
+  height: rem(16px);
+  fill: $white;
+}
+
+.map-header-user__avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.map-header-user__dropdown {
+  position: absolute;
+  top: calc(100% + #{rem(6px)});
+  right: 0;
+  width: rem(360px);
+  max-width: calc(100vw - #{rem(20px)});
+  max-height: calc(100vh - #{rem(80px)});
+  background: $white;
+  border: 1px solid $border-color-2;
+  border-radius: rem(4px);
+  box-shadow: $pop-box-shadow;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-header-user__dropdown-body {
+  overflow-y: auto;
+  padding-top: rem(32px);
+}
+
+.map-header-user__close {
+  position: absolute;
+  top: rem(6px);
+  right: rem(6px);
+  z-index: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: rem(6px);
+  border-radius: rem(2px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover,
+  &:focus {
+    background-color: $grey-light;
+    outline: none;
+  }
+}
+
+.map-header-user__close-icon {
+  width: rem(12px);
+  height: rem(12px);
+  fill: $slate;
+}
+
+.c-map-header-user .map-header-user__dropdown {
+
+  // Reset some absolute positioning the MyAccount component uses for the
+  // sidebar context — inside this dropdown it should flow normally.
+  .c-map-menu-my-account {
+    height: auto;
+
+    .my-account .my-account-footer {
+      position: static;
+    }
+
+    .my-account-login-image {
+      display: none;
+    }
+  }
+}

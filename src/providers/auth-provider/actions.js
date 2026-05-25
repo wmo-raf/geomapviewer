@@ -24,8 +24,9 @@ export const getUserProfile = createThunkAction(
                 dispatch(
                   setAuth({
                     loggedIn: true,
-                    id: data.user_id,
-                    ...(data && data),
+                    ...authResponse.data,
+                    ...data,
+                    id: data.user_id || authResponse.data.id,
                   })
                 );
               }
