@@ -140,7 +140,9 @@
     "readdirp": "3.6.0",
     "cwebp-bin": "6.1.2",
     "prop-types": "15.8.1",
-    "@mapbox/mapbox-gl-draw": "1.4.1"
+    "@mapbox/mapbox-gl-draw": "1.4.1",
+    "minimatch": "9.0.5",
+    "axios": "0.21.1"
   },
   "overrides": {
     "quick-lru": "6.1.2",
