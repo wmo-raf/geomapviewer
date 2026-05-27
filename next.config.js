@@ -42,12 +42,12 @@ const nextConfig = {
   // Expose env vars to the browser for local development (npm run dev).
   // In Docker these are overridden at runtime via window.RUNTIME_CONFIG.
   env: {
-    CMS_API: process.env.CMS_API,
-    ANALYTICS_PROPERTY_ID: process.env.ANALYTICS_PROPERTY_ID,
-    BASE_PATH: process.env.BASE_PATH,
-    BITLY_TOKEN: process.env.BITLY_TOKEN,
-    GOOGLE_CUSTOM_SEARCH_CX: process.env.GOOGLE_CUSTOM_SEARCH_CX,
-    GOOGLE_SEARCH_API_KEY: process.env.GOOGLE_SEARCH_API_KEY,
+    CMS_API: process.env.CMS_API || "",
+    ANALYTICS_PROPERTY_ID: process.env.ANALYTICS_PROPERTY_ID || "",
+    BASE_PATH: process.env.BASE_PATH || "",
+    BITLY_TOKEN: process.env.BITLY_TOKEN || "",
+    GOOGLE_CUSTOM_SEARCH_CX: process.env.GOOGLE_CUSTOM_SEARCH_CX || "",
+    GOOGLE_SEARCH_API_KEY: process.env.GOOGLE_SEARCH_API_KEY || "",
   },
 };
 
