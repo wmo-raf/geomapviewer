@@ -44,7 +44,7 @@ export default class MyDocument extends Document {
             href="/favicon/safari-pinned-tab.svg"
             color="#5bbad5"
           />
-          <script src="/runtime-config.js"></script>
+          <script src="/_next/static/runtime-config.js"></script>
 
           <meta name="msapplication-TileColor" content="#da532c" />
           <meta name="theme-color" content="#ffffff" />
