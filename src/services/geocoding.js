@@ -38,26 +38,6 @@ export const fetchGeocodeNominatim = (
     });
 };
 
-export const fetchGeocodeLocations = (
-  searchQuery = "",
-  lang = "en",
-  cancelToken
-) => {
-  return nominatimGeocodingRequest
-    .get(
-      `/search?q=${searchQuery}&format=geojson&&viewbox=${EA_BBOX.toString()}&bounded=1`,
-      {
-        cancelToken,
-      }
-    )
-    .then((res) => {
-      const features =
-        res?.data?.features && parseNominatimRes(res.data.features);
-      return features || [];
-    })
-    .catch(() => []);
-};
-
 export const fetchReverseGeocodePoint = ({ lat, lng, cancelToken }) => {
   return nominatimGeocodingRequest({
     method: "get",

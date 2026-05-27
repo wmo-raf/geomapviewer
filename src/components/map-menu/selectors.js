@@ -13,7 +13,7 @@ import {
 
 import { getEmbed } from "@/layouts/map/selectors";
 
-import { upperSections, searchSections, mobileSections } from "./sections";
+import { mobileSections } from "./sections";
 import Datasets from "./components/sections/datasets";
 import icons from "./icons";
 
@@ -42,16 +42,6 @@ export const getSubCategoryGroupsSelected = createSelector(
 export const getDatasetCategory = createSelector(
   [getMenuSettings],
   (settings) => settings.datasetCategory
-);
-
-export const getSearch = createSelector(
-  [getMenuSettings],
-  (settings) => settings.search
-);
-
-export const getSearchType = createSelector(
-  [getMenuSettings],
-  (settings) => settings.searchType
 );
 
 export const getExploreType = createSelector(
@@ -170,10 +160,7 @@ export const getAllSections = createSelector(
   (datasetSections) => {
     if (!datasetSections) return null;
 
-    return datasetSections
-      .concat(upperSections)
-      .concat(searchSections)
-      .concat(mobileSections);
+    return datasetSections.concat(mobileSections);
   }
 );
 
@@ -206,24 +193,6 @@ export const getActiveSectionWithData = createSelector(
       }),
     };
   }
-);
-
-export const getUpperSections = createSelector(
-  [getMenuSection],
-  (menuSection) =>
-    upperSections.map((s) => ({
-      ...s,
-      active: menuSection === s.slug,
-    }))
-);
-
-export const getSearchSections = createSelector(
-  [getMenuSection],
-  (menuSection) =>
-    searchSections.map((s) => ({
-      ...s,
-      active: menuSection === s.slug,
-    }))
 );
 
 const getLegendLayerGroups = createSelector([getLayerGroups], (groups) => {
@@ -261,17 +230,13 @@ export const getDatasetCategories = createSelector(
 );
 
 export const getMenuProps = createStructuredSelector({
-  upperSections: getUpperSections,
   datasetSections: getDatasetSectionsWithData,
-  searchSections: getSearchSections,
   mobileSections: getMobileSections,
   activeSection: getActiveSectionWithData,
   menuSection: getMenuSection,
   activeDatasets: getActiveDatasetsFromState,
   datasetCategory: getDatasetCategory,
   datasetCategories: getDatasetCategories,
-  search: getSearch,
-  searchType: getSearchType,
   location: getLocation,
   loading: getLoading,
   analysisLoading: getAnalysisLoading,

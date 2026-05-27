@@ -43,20 +43,14 @@ const PanelDesktop = posed.div({
 class MenuPanel extends PureComponent {
   panelLabel() {
     const { label, category, setMenuSettings } = this.props;
-    const isSearch = label.toLowerCase() === "search";
 
-    if (category || isSearch) {
+    if (category) {
       return (
         <button
-          onClick={() =>
-            setMenuSettings({
-              ...(category && { datasetCategory: "" }),
-              ...(isSearch && { searchType: "" }),
-            })
-          }
+          onClick={() => setMenuSettings({ datasetCategory: "" })}
         >
           <Icon icon={arrowIcon} className="icon-return" />
-          <span>{isSearch ? label : startCase(category)}</span>
+          <span>{startCase(category)}</span>
         </button>
       );
     }

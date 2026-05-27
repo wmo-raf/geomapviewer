@@ -87,9 +87,7 @@ class MapMenu extends PureComponent {
   render() {
     const {
       className,
-      upperSections,
       datasetSections,
-      searchSections,
       mobileSections,
       activeSection,
       setMenuSettings,
@@ -121,9 +119,7 @@ class MapMenu extends PureComponent {
             <MenuDesktop
               className="menu-desktop"
               datasetSections={datasetSections}
-              searchSections={searchSections}
               setMenuSettings={setMenuSettings}
-              upperSections={upperSections}
             />
           )}
           {!isDesktop && (
@@ -183,7 +179,6 @@ MapMenu.propTypes = {
   sections: PropTypes.array,
   className: PropTypes.string,
   datasetSections: PropTypes.array,
-  searchSections: PropTypes.array,
   mobileSections: PropTypes.array,
   activeSection: PropTypes.object,
   setMenuSettings: PropTypes.func,
@@ -196,7 +191,6 @@ MapMenu.propTypes = {
   activeDatasets: PropTypes.array,
   setMapSettings: PropTypes.func,
   handleClickLocation: PropTypes.func,
-  getLocationFromSearch: PropTypes.func,
   exploreSection: PropTypes.string,
   menuSection: PropTypes.string,
   datasetCategory: PropTypes.string,
