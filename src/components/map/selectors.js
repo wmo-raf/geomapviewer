@@ -32,6 +32,7 @@ const selectLayersLoadingStatus = (state) =>
   state.datasets && state.datasets.layerLoadingStatus;
 
 const selectDatasetParams = (state) => state.datasets?.params;
+const selectCogUrls = (state) => state.datasets?.cogUrls || {};
 const selectMapPrinting = (state) => state.map && state.map?.settings?.printing;
 const getMainMapSettings = (state) => state.mainMap || {};
 export const getBasemaps = (state) => state.config?.basemaps || {};
@@ -476,9 +477,58 @@ export const getLayersWithSettingsParams = createSelector(
   }
 );
 
+// Rewrite raster_cog layers to use a `cog://` raster source for the current
+// selected time. Coloring is handled client-side by setColorFunction, so the
+// render layer stays a vanilla raster layer with no special paint.
+// 1x1 transparent PNG used as a placeholder tile while we wait for the COG
+// TileJSON fetch to resolve. An empty `tiles: []` crashes maplibre in
+// production (tiles[NaN].replace(...) during the first render); a no-op data
+// URL keeps the source valid and inert until the real cog:// URL lands.
+const COG_PLACEHOLDER_TILE =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgAAIAAAUAAen63NgAAAAASUVORK5CYII=";
+
+export const getLayersWithCogSource = createSelector(
+  [getLayersWithSettingsParams, selectCogUrls],
+  (layers, cogUrls) => {
+    if (isEmpty(layers)) return layers;
+
+    return layers.map((l) => {
+      if (l.layerType !== "raster_cog") return l;
+
+      const urlsMap = cogUrls[l.id] || {};
+      const selectedTime = l?.params?.time;
+      const cogUrl =
+        (selectedTime && urlsMap[selectedTime]) ||
+        Object.values(urlsMap)[0] ||
+        null;
+
+      const source = cogUrl
+        ? {
+            type: "raster",
+            url: `cog://${cogUrl}`,
+            tileSize: 256,
+          }
+        : {
+            type: "raster",
+            tiles: [COG_PLACEHOLDER_TILE],
+            tileSize: 256,
+          };
+
+      return {
+        ...l,
+        layerConfig: {
+          ...l.layerConfig,
+          type: "raster",
+          source,
+        },
+      };
+    });
+  }
+);
+
 // flatten datasets into layers for the layer manager
 export const getAllLayers = createSelector(
-  getLayersWithSettingsParams,
+  getLayersWithCogSource,
   (layers) => {
     if (isEmpty(layers)) return null;
 
@@ -695,9 +745,10 @@ export const getInteractions = createSelector(
     const interactiveLayers = activeLayers.filter(
       (l) =>
         !isEmpty(l.interactionConfig) &&
-        l.layerConfig &&
-        l.layerConfig.render &&
-        l.layerConfig.render.layers
+        ((l.layerConfig &&
+          l.layerConfig.render &&
+          l.layerConfig.render.layers) ||
+          l.interactionConfig.type === "wmsGetFeatureInfo")
     );
 
     return Object.keys(interactions).reduce((all, layerId) => {
@@ -792,6 +843,7 @@ export const getMapProps = createStructuredSelector({
   interaction: getInteractionSelected,
   interactiveLayerIds: getInteractiveLayerIds,
   hoverableLayerIds: getHoverableLayerIds,
+  activeLayers: getActiveLayers,
   basemap: getBasemap,
   lang: getActiveMapLang,
   location: selectLocation,

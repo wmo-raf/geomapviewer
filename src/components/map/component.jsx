@@ -4,8 +4,26 @@ import isEqual from "lodash/isEqual";
 import isEmpty from "lodash/isEmpty";
 import debounce from "lodash/debounce";
 import cx from "classnames";
+import maplibregl from "maplibre-gl";
+import { Protocol as PmtilesProtocol } from "pmtiles";
+import { cogProtocol } from "@geomatico/maplibre-cog-protocol";
+
+// Register custom maplibre protocols at module load time so they are available
+// before any source using them is added to the map. Registering inside onLoad
+// races with layer-manager adding sources in production builds.
+if (typeof window !== "undefined") {
+  if (!window.__pmtilesRegistered) {
+    maplibregl.addProtocol("pmtiles", new PmtilesProtocol().tile);
+    window.__pmtilesRegistered = true;
+  }
+  if (!window.__cogRegistered) {
+    maplibregl.addProtocol("cog", cogProtocol);
+    window.__cogRegistered = true;
+  }
+}
 
 import { trackMapLatLon, trackEvent } from "@/utils/analytics";
+import { fetchGetFeatureInfo } from "@/services/wms-feature-info";
 
 import Loader from "@/components/ui/loader";
 import Icon from "@/components/ui/icon";
@@ -114,6 +132,8 @@ class MapComponent extends Component {
     mapStyle: PropTypes.string,
     setMapSettings: PropTypes.func.isRequired,
     setMapInteractions: PropTypes.func.isRequired,
+    addMapInteraction: PropTypes.func,
+    activeLayers: PropTypes.array,
     clearMapInteractions: PropTypes.func.isRequired,
     setMapHoverInteraction: PropTypes.func.isRequired,
     clearMapHoverInteraction: PropTypes.func.isRequired,
@@ -315,15 +335,22 @@ class MapComponent extends Component {
   loadMapImages = async () => {
     const { vectorLayerIcons } = this.props;
 
-    if (vectorLayerIcons && !!vectorLayerIcons.length && this.map) {
-      vectorLayerIcons.forEach((icon) => {
-        this.map.loadImage(icon.url, (error, iconImage) => {
-          if (!error && iconImage) {
-            this.map.addImage(icon.name, iconImage);
+    if (!vectorLayerIcons || !vectorLayerIcons.length || !this.map) return;
+
+    await Promise.all(
+      vectorLayerIcons.map(async (icon) => {
+        try {
+          const response = await this.map.loadImage(icon.url);
+          const image = response?.data || response;
+          if (image && !this.map.hasImage(icon.name)) {
+            this.map.addImage(icon.name, image);
           }
-        });
-      });
-    }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn(`Failed to load map image ${icon.name}:`, err);
+        }
+      })
+    );
   };
 
   fitMapBoundaryBounds = () => {
@@ -448,26 +475,87 @@ class MapComponent extends Component {
   };
 
   onClick = (e) => {
-    const { drawing, clearMapInteractions } = this.props;
-    if (!drawing && e.features && e.features.length) {
-      const { features, lngLat } = e;
-      const { setMapInteractions } = this.props;
+    const {
+      drawing,
+      clearMapInteractions,
+      setMapInteractions,
+      addMapInteraction,
+      activeLayers,
+    } = this.props;
 
-      setMapInteractions({
-        features: features.map((f) => ({
-          ...f,
-          geometry: f.geometry,
-          // _vectorTileFeature cannot be serialized by redux
-          // so we must remove them before dispatching the action
-          _vectorTileFeature: null,
-        })),
-        lngLat,
-      });
-    } else if (drawing) {
+    if (drawing) {
       this.setState({ drawClicks: this.state.drawClicks + 1 });
-    } else {
-      clearMapInteractions();
+      return;
     }
+
+    const { features = [], lngLat } = e;
+    const lng = Array.isArray(lngLat) ? lngLat[0] : lngLat?.lng;
+    const lat = Array.isArray(lngLat) ? lngLat[1] : lngLat?.lat;
+    const wmsLayers = (activeLayers || []).filter(
+      (l) => l?.interactionConfig?.type === "wmsGetFeatureInfo"
+    );
+
+    if (!features.length && !wmsLayers.length) {
+      clearMapInteractions();
+      return;
+    }
+
+    setMapInteractions({
+      features: features.map((f) => ({
+        ...f,
+        geometry: f.geometry,
+        // _vectorTileFeature cannot be serialized by redux
+        // so we must remove them before dispatching the action
+        _vectorTileFeature: null,
+      })),
+      lngLat,
+    });
+
+    if (!wmsLayers.length || !this.map) return;
+
+    wmsLayers.forEach((layer) => {
+      addMapInteraction({
+        id: layer.id,
+        interaction: {
+          id: layer.id,
+          geometry: { type: "Point", coordinates: [lng, lat] },
+          data: { properties: {}, wmsFeatures: [], loading: true },
+        },
+      });
+
+      fetchGetFeatureInfo({ layer, map: this.map, lngLat: { lng, lat } })
+        .then((results) => {
+          addMapInteraction({
+            id: layer.id,
+            interaction: {
+              id: layer.id,
+              geometry: { type: "Point", coordinates: [lng, lat] },
+              data: {
+                properties: results[0]?.properties || {},
+                wmsFeatures: results,
+                loading: false,
+              },
+            },
+          });
+        })
+        .catch((err) => {
+          // eslint-disable-next-line no-console
+          console.error("WMS GetFeatureInfo failed", err);
+          addMapInteraction({
+            id: layer.id,
+            interaction: {
+              id: layer.id,
+              geometry: { type: "Point", coordinates: [lng, lat] },
+              data: {
+                properties: {},
+                wmsFeatures: [],
+                loading: false,
+                error: err?.message || "Request failed",
+              },
+            },
+          });
+        });
+    });
   };
 
   onMouseMove = (e) => {

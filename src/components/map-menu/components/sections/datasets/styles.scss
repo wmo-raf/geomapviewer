@@ -160,4 +160,68 @@ $plain-menu: #f1f1f1;
     font-size: rem(13px);
     margin-bottom: rem(10px);
   }
+
+  .layers-filter {
+    display: flex;
+    align-items: center;
+    background-color: $white;
+    border: 1px solid $border-color-2;
+    border-radius: rem(4px);
+    height: rem(34px);
+    padding: 0 rem(8px);
+    margin: rem(10px) rem(15px) rem(15px);
+    transition: border-color 0.15s ease;
+
+    @media screen and (min-width: $screen-m) {
+      margin: 0 rem(20px) rem(15px);
+    }
+
+    &:focus-within {
+      border-color: $primary-color;
+    }
+
+    .layers-filter__search-icon {
+      width: rem(14px);
+      height: rem(14px);
+      fill: $slate;
+      flex-shrink: 0;
+      margin-right: rem(8px);
+    }
+
+    .layers-filter__input {
+      flex: 1 1 auto;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: rem(13px);
+      color: $slate-dark;
+      height: 100%;
+      min-width: 0;
+
+      &::placeholder {
+        color: $hot-grey;
+      }
+    }
+
+    .layers-filter__clear {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: rem(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background-color: $grey-light;
+      }
+    }
+
+    .layers-filter__clear-icon {
+      width: rem(10px);
+      height: rem(10px);
+      fill: $slate;
+    }
+  }
 }

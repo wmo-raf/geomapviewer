@@ -3,11 +3,31 @@ import bbox from "@turf/bbox";
 import { isEmpty } from "lodash";
 import { connect } from "react-redux";
 import { wrap } from "comlink";
+import { setColorFunction } from "@geomatico/maplibre-cog-protocol";
 
 import * as ownActions from "./actions";
 import { getDatasetProps } from "./selectors";
 import { setMapSettings } from "@/components/map/actions";
 import { parseISO } from "date-fns";
+import { buildColorFunction } from "@/utils/color-ramp";
+
+const registeredCogColorUrls = new Set();
+
+const registerCogColorFunctions = (urlsMap, colorRamp) => {
+  if (!urlsMap || !colorRamp) return;
+  const fn = buildColorFunction(colorRamp);
+  if (!fn) return;
+  Object.values(urlsMap).forEach((cogUrl) => {
+    if (!cogUrl || registeredCogColorUrls.has(cogUrl)) return;
+    try {
+      setColorFunction(cogUrl, fn);
+      registeredCogColorUrls.add(cogUrl);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("setColorFunction failed for", cogUrl, err);
+    }
+  });
+};
 
 const actions = {
   ...ownActions,
@@ -40,24 +60,73 @@ class LayerUpdate extends PureComponent {
     }
   }
 
-  getWMSTimestamps = async () => {
-    const { layer } = this.props;
+  getWMSLayerInfo = async () => {
+    const { layer, legendFromCapabilities } = this.props;
 
     const {
-      id: layerId,
       getCapabilitiesUrl,
       layerName,
-      autoUpdateInterval,
       getCapabilitiesLayerName,
+      styles,
     } = layer;
 
     this.initWmsWorker();
 
     if (this.wmsWorkerRef.current) {
-      return await this.wmsWorkerRef.current.wmsGetLayerTimeFromCapabilities(
+      const styleName = legendFromCapabilities && Array.isArray(styles)
+        ? styles.join(',')
+        : null;
+
+      return await this.wmsWorkerRef.current.wmsGetLayerInfoFromCapabilities(
         getCapabilitiesUrl,
-        getCapabilitiesLayerName || layerName
+        getCapabilitiesLayerName || layerName,
+        styleName
       );
+    }
+
+    return {};
+  };
+
+  processTimestamps = (timestamps) => {
+    const {
+      layer,
+      setMapSettings,
+      setTimestamps,
+      getCurrentLayerTime,
+      activeDatasets,
+    } = this.props;
+
+    const { id: layerId, linkedLayers } = layer;
+
+    setTimestamps({ [layerId]: [...timestamps] });
+
+    if (linkedLayers && !!linkedLayers.length) {
+      linkedLayers.forEach((linkedLayer) => {
+        setTimestamps({ [linkedLayer]: [...timestamps] });
+      });
+    }
+
+    if (timestamps.length) {
+      const newParams = {
+        time: timestamps[timestamps.length - 1],
+      };
+
+      if (getCurrentLayerTime) {
+        const sortedTimestamps = timestamps
+          .slice()
+          .sort((a, b) => parseISO(a) - parseISO(b));
+        newParams.time = getCurrentLayerTime(sortedTimestamps);
+      }
+
+      const newDatasets = activeDatasets.map((l) => {
+        const dataset = { ...l };
+        if (l.layers.includes(layerId)) {
+          dataset.params = { ...dataset.params, ...newParams };
+        }
+        return dataset;
+      });
+
+      setMapSettings({ datasets: newDatasets });
     }
   };
 
@@ -65,15 +134,18 @@ class LayerUpdate extends PureComponent {
     const {
       layer,
       getTimestamps,
+      getTileJson,
       getData,
       setMapSettings,
       setTimestamps,
-      getCurrentLayerTime,
+      setCogUrls,
+      setLayerLegend,
       setGeojsonData,
       activeDatasets,
       setLayerUpdatingStatus,
       setLayerLoadingStatus,
       zoomToDataExtent,
+      legendFromCapabilities,
     } = this.props;
 
     const {
@@ -81,8 +153,12 @@ class LayerUpdate extends PureComponent {
       layerType,
       isMultiLayer,
       isDefault,
-      linkedLayers,
+      multiTemporal,
     } = layer;
+
+    const needsWmsCapabilities =
+      layerType === "wms" &&
+      ((!getTimestamps && multiTemporal) || legendFromCapabilities);
 
     let getLayerTimestamps = getTimestamps;
 
@@ -90,12 +166,65 @@ class LayerUpdate extends PureComponent {
       getLayerTimestamps = null;
     }
 
-    if (!getTimestamps && layerType === "wms") {
-      getLayerTimestamps = this.getWMSTimestamps;
-    }
+    if (getTileJson && !(isMultiLayer && !isDefault)) {
+      console.log(`Updating layer : ${layerId}, fetching COG TileJSON`);
 
-    // update timestamps
-    if (getLayerTimestamps) {
+      setLayerUpdatingStatus({ [layerId]: true });
+      if (isInitial) setLayerLoadingStatus({ [layerId]: true });
+
+      try {
+        const tileJson = await getTileJson();
+        const urls = tileJson?.urls || {};
+        const timestamps = tileJson?.timestamps || [];
+
+        registerCogColorFunctions(urls, layer.colorRamp);
+        setCogUrls({ [layerId]: urls });
+
+        if (multiTemporal) {
+          this.processTimestamps(timestamps);
+        } else {
+          setTimestamps({ [layerId]: timestamps });
+        }
+
+        setLayerUpdatingStatus({ [layerId]: false });
+        if (isInitial) setLayerLoadingStatus({ [layerId]: false });
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("raster_cog TileJSON fetch failed", err);
+        setTimestamps({ [layerId]: [] });
+        setLayerUpdatingStatus({ [layerId]: false });
+        setLayerLoadingStatus({ [layerId]: false });
+      }
+    } else if (needsWmsCapabilities) {
+      console.log(`Updating layer : ${layerId}, fetching capabilities`);
+
+      setLayerUpdatingStatus({ [layerId]: true });
+
+      if (isInitial) {
+        setLayerLoadingStatus({ [layerId]: true });
+      }
+
+      try {
+        const info = await this.getWMSLayerInfo();
+
+        if (info.legendUrl) {
+          setLayerLegend({ [layerId]: info.legendUrl });
+        }
+
+        if (!getTimestamps && multiTemporal) {
+          this.processTimestamps(info.timestamps || []);
+        }
+
+        setLayerUpdatingStatus({ [layerId]: false });
+        if (isInitial) {
+          setLayerLoadingStatus({ [layerId]: false });
+        }
+      } catch (err) {
+        setTimestamps({ [layerId]: [] });
+        setLayerUpdatingStatus({ [layerId]: false });
+        setLayerLoadingStatus({ [layerId]: false });
+      }
+    } else if (getLayerTimestamps) {
       console.log(`Updating layer : ${layerId}, fetching latest timestamps`);
 
       setLayerUpdatingStatus({ [layerId]: true });
@@ -106,44 +235,7 @@ class LayerUpdate extends PureComponent {
 
       getLayerTimestamps()
         .then((timestamps) => {
-          // sort timestamps by date
-          setTimestamps({ [layerId]: [...timestamps] });
-
-          if (linkedLayers && !!linkedLayers.length) {
-            linkedLayers.forEach((linkedLayer) => {
-              setTimestamps({ [linkedLayer]: [...timestamps] });
-            });
-          }
-
-          const newParams = {
-            time: timestamps[timestamps.length - 1],
-          };
-
-          if (getCurrentLayerTime) {
-            const sortedTimestamps =
-              timestamps &&
-              !!timestamps.length &&
-              timestamps.sort((a, b) => parseISO(a) - parseISO(b));
-
-            const newTime = getCurrentLayerTime(sortedTimestamps);
-
-            newParams.time = newTime;
-          }
-
-          const newDatasets = activeDatasets.map((l) => {
-            const dataset = { ...l };
-            if (l.layers.includes(layerId)) {
-              dataset.params = {
-                ...dataset.params,
-                ...newParams,
-              };
-            }
-            return dataset;
-          });
-
-          setMapSettings({
-            datasets: newDatasets,
-          });
+          this.processTimestamps(timestamps);
 
           setLayerUpdatingStatus({ [layerId]: false });
 
@@ -153,9 +245,7 @@ class LayerUpdate extends PureComponent {
         })
         .catch((err) => {
           setTimestamps({ [layerId]: [] });
-
           setLayerUpdatingStatus({ [layerId]: false });
-
           setLayerLoadingStatus({ [layerId]: false });
         });
     }

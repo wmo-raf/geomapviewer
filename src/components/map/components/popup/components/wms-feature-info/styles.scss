@@ -1,0 +1,52 @@
+@import '@/styles/settings.scss';
+
+.c-wms-feature-info {
+  font-size: rem(14px);
+  max-height: 320px;
+  overflow-y: auto;
+
+  .feature {
+    margin-bottom: 12px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .feature-title {
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      font-size: rem(12px);
+      color: $primary-color;
+    }
+
+    .empty {
+      color: #888;
+      font-style: italic;
+    }
+  }
+
+  .table {
+    .wrapper {
+      display: flex;
+      justify-content: flex-start;
+      align-items: flex-start;
+      width: 100%;
+      margin-bottom: 8px;
+
+      .label {
+        width: 45%;
+        min-width: 45%;
+        font-weight: 500;
+        margin-right: 10px;
+        text-transform: uppercase;
+        word-break: break-word;
+      }
+
+      .value {
+        flex: 1;
+        word-break: break-word;
+      }
+    }
+  }
+}

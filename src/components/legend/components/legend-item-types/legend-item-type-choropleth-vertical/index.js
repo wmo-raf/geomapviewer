@@ -28,7 +28,7 @@ class LegendTypeChoroplethVertical extends PureComponent {
           <tbody>
             {legendConfig.items.map(({ color, name }, i) => {
               return (
-                <tr>
+                <tr key={`${name}-${color}-${i}`}>
                   <th>
                     <span style={{ backgroundColor: color }}></span>
                   </th>

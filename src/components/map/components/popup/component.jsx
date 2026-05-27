@@ -10,6 +10,7 @@ import AreaSentence from "./components/area-sentence";
 import ArticleCard from "./components/article-card";
 import CapAlertCard from "./components/cap-alert-card";
 import DataTable from "./components/data-table";
+import WmsFeatureInfo from "./components/wms-feature-info";
 import BoundarySentence from "./components/boundary-sentence";
 import ContextualSentence from "./components/contextual-sentence";
 import PointSentence from "./components/point-sentence";
@@ -123,7 +124,8 @@ class Popup extends Component {
 
     const hasManyInteractions = interactionOptionsWithMapPoint?.length > 1;
 
-    const { isAoi, isBoundary, isPoint, isLayer } = selected || {};
+    const { isAoi, isBoundary, isPoint, isLayer, isWmsFeatureInfo } =
+      selected || {};
 
     return (
       <div className="popup-body">
@@ -158,7 +160,10 @@ class Popup extends Component {
               />
             )}
             {isAoi && <AreaSentence data={selected} />}
-            {!isBoundary && !isAoi && isLayer && (
+            {!isBoundary && !isAoi && isWmsFeatureInfo && (
+              <WmsFeatureInfo data={selected} />
+            )}
+            {!isBoundary && !isAoi && !isWmsFeatureInfo && isLayer && (
               <DataTable
                 selected={selected}
                 map={map}

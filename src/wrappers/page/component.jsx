@@ -71,6 +71,4 @@ PageWrapper.propTypes = {
   errorDescription: PropTypes.string,
 };
 
-PageWrapper.defaultProps = {};
-
 export default PageWrapper;

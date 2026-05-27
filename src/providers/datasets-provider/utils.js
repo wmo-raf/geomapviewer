@@ -1,5 +1,5 @@
 import { fetchUrlTimestamps } from "@/services/timestamps";
-import { getTimeValuesFromWMS } from "@/utils/wms";
+import { fetchTileJson } from "@/services/raster-cog";
 import { getNextDate, getPreviousDate } from "@/utils/time";
 
 import { POLITICAL_BOUNDARIES_DATASET } from "@/data/datasets";
@@ -64,6 +64,29 @@ const rasterFileUpdateProvider = (layer) => {
   };
 };
 
+const rasterCogUpdateProvider = (layer) => {
+  const {
+    currentTimeMethod,
+    autoUpdateInterval,
+    settings = {},
+    tileJsonUrl,
+  } = layer;
+
+  const { autoUpdateActive = true } = settings;
+
+  return {
+    layer,
+    getTileJson: () => fetchTileJson(tileJsonUrl),
+    getCurrentLayerTime: (timestamps) => {
+      return getLayerTime(timestamps, currentTimeMethod);
+    },
+    ...(!!autoUpdateInterval &&
+      autoUpdateActive && {
+        updateInterval: autoUpdateInterval,
+      }),
+  };
+};
+
 const wmsUpdateProvider = (layer) => {
   const {
     id: layerId,
@@ -71,13 +94,20 @@ const wmsUpdateProvider = (layer) => {
     layerName,
     autoUpdateInterval,
     currentTimeMethod,
+    multiTemporal,
+    legendConfig,
   } = layer;
+
+  const legendFromCapabilities = legendConfig?.type === "wms_capabilities";
 
   return {
     layer: layer,
-    getCurrentLayerTime: (timestamps) => {
-      return getLayerTime(timestamps, currentTimeMethod);
-    },
+    legendFromCapabilities,
+    ...(multiTemporal && {
+      getCurrentLayerTime: (timestamps) => {
+        return getLayerTime(timestamps, currentTimeMethod);
+      },
+    }),
     ...(!!autoUpdateInterval && {
       updateInterval: autoUpdateInterval,
     }),
@@ -116,14 +146,19 @@ const tileLayerUpdateProvider = (layer) => {
 
 export const createUpdateProviders = (activeLayers) => {
   const providers = activeLayers.reduce((all, layer) => {
-    const { layerType, multiTemporal } = layer;
+    const { layerType, multiTemporal, legendConfig } = layer;
 
     let provider;
+
+    const legendFromCapabilities = legendConfig?.type === "wms_capabilities";
 
     if (multiTemporal && layerType) {
       switch (layerType) {
         case "raster_file":
           provider = rasterFileUpdateProvider(layer);
+          break;
+        case "raster_cog":
+          provider = rasterCogUpdateProvider(layer);
           break;
         case "wms":
           provider = wmsUpdateProvider(layer);
@@ -135,6 +170,10 @@ export const createUpdateProviders = (activeLayers) => {
         default:
           break;
       }
+    } else if (!multiTemporal && layerType === "raster_cog") {
+      provider = rasterCogUpdateProvider(layer);
+    } else if (!multiTemporal && layerType === "wms" && legendFromCapabilities) {
+      provider = wmsUpdateProvider(layer);
     }
 
     if (provider) {
