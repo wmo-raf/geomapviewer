@@ -1,6 +1,7 @@
 import request from "@/utils/request";
+import { getRuntimeConfig } from "@/utils/runtime-config";
+const { CMS_API } = getRuntimeConfig();
 
-import { CMS_API } from "@/utils/apis";
 import { parseISO } from "date-fns";
 
 export const fetchRasterPixelValue = ({ layerId, lat, lng, time }) => {
