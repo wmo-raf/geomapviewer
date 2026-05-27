@@ -8,6 +8,20 @@ import maplibregl from "maplibre-gl";
 import { Protocol as PmtilesProtocol } from "pmtiles";
 import { cogProtocol } from "@geomatico/maplibre-cog-protocol";
 
+// Register custom maplibre protocols at module load time so they are available
+// before any source using them is added to the map. Registering inside onLoad
+// races with layer-manager adding sources in production builds.
+if (typeof window !== "undefined") {
+  if (!window.__pmtilesRegistered) {
+    maplibregl.addProtocol("pmtiles", new PmtilesProtocol().tile);
+    window.__pmtilesRegistered = true;
+  }
+  if (!window.__cogRegistered) {
+    maplibregl.addProtocol("cog", cogProtocol);
+    window.__cogRegistered = true;
+  }
+}
+
 import { trackMapLatLon, trackEvent } from "@/utils/analytics";
 import { fetchGetFeatureInfo } from "@/services/wms-feature-info";
 
@@ -385,19 +399,6 @@ class MapComponent extends Component {
 
   onLoad = ({ map, mapContainer }, mapSide) => {
     const { setMapSettings } = this.props;
-
-    // Register PMTiles protocol once
-    if (!MapComponent._pmtilesRegistered) {
-      const protocol = new PmtilesProtocol();
-      maplibregl.addProtocol("pmtiles", protocol.tile);
-      MapComponent._pmtilesRegistered = true;
-    }
-
-    // Register COG protocol once
-    if (!MapComponent._cogRegistered) {
-      maplibregl.addProtocol("cog", cogProtocol);
-      MapComponent._cogRegistered = true;
-    }
 
     // remove any if existing
     if (this.state.compareMap) {

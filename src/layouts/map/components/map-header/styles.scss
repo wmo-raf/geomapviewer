@@ -1,0 +1,180 @@
+@import "@/styles/settings.scss";
+
+$map-header-height: 50px;
+
+.c-map-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: $map-header-height;
+  z-index: 10;
+  background: $white;
+  border-bottom: 1px solid $border;
+  box-shadow: 0 1px 4px rgba($slate, 0.08);
+
+  .navbar {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 0 rem(12px);
+    margin: 0;
+    background: transparent;
+    min-height: 0;
+  }
+
+  .map-header__brand {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 10px;
+    margin: 0 5px;
+    margin-right: rem(16px);
+
+    @media screen and (min-width: $screen-m) {
+      min-width: rem(180px);
+      max-width: rem(280px);
+    }
+  }
+
+  .map-header__logo {
+    display: block;
+    height: 100%;
+    padding: rem(4px) 0;
+    line-height: 0;
+  }
+
+  .map-header__logo-image {
+    height: 100%;
+    max-height: calc(#{$map-header-height} - #{rem(10px)});
+    width: auto;
+    object-fit: contain;
+    padding: 0 10px;
+    margin: 0 5px;
+  }
+
+  .map-header__nav-wrapper {
+    flex: 0 0 auto;
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    margin-right: rem(12px);
+  }
+
+  .map-header__burger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: rem(6px);
+    border-radius: rem(2px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover,
+    &:focus {
+      background-color: $grey-light;
+      outline: none;
+    }
+
+    @media screen and (min-width: $screen-l) {
+      display: none;
+    }
+  }
+
+  .map-header__burger-icon {
+    width: rem(20px);
+    height: rem(20px);
+    fill: $slate;
+  }
+
+  .map-header__nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    @media screen and (max-width: ($screen-l - 0.0625rem)) {
+      position: absolute;
+      top: calc(100% + #{rem(4px)});
+      left: 0;
+      min-width: rem(200px);
+      background: $white;
+      border: 1px solid $border-color-2;
+      border-radius: rem(4px);
+      box-shadow: $pop-box-shadow;
+      padding: rem(4px) 0;
+      z-index: 11;
+      display: none;
+
+      &.open {
+        display: block;
+      }
+    }
+
+    @media screen and (min-width: $screen-l) {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+  }
+
+  .map-header__nav-item {
+    @media screen and (min-width: $screen-l) {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+  }
+
+  .map-header__nav-link {
+    display: block;
+    padding: rem(8px) rem(12px);
+    color: $slate;
+    font-size: $font-size-s;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    line-height: 1;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover,
+    &:focus {
+      background-color: $grey-light;
+      color: $slate-dark;
+      outline: none;
+      text-decoration: none;
+    }
+
+    @media screen and (min-width: $screen-l) {
+      padding: 0 rem(10px);
+      margin: 0 rem(2px);
+
+      &:hover,
+      &:focus {
+        background-color: transparent;
+        color: $primary-color;
+      }
+    }
+  }
+
+  .map-header__search {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .map-header__actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+
+    @media screen and (min-width: $screen-m) {
+      min-width: rem(180px);
+      justify-content: flex-end;
+    }
+  }
+}

@@ -12,6 +12,7 @@ export const initialState = {
   logo: {},
   countries: [],
   links: {},
+  navigation: [],
   disclaimerText: "",
   enableMyAccount: false,
   allowSignups: false,

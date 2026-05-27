@@ -23,6 +23,7 @@ import MapMenu from "@/components/map-menu";
 
 import DataAnalysisMenu from "./components/data-analysis-menu";
 import MapControlButtons from "./components/map-controls";
+import MapHeader from "./components/map-header";
 
 import "./styles.scss";
 
@@ -74,6 +75,7 @@ class MainMapComponent extends PureComponent {
         <Mobile>
           <MapMenu className="map-menu" embed={embed} />
         </Mobile>
+        {!embed && <MapHeader />}
         <div
           className="main-map-container"
           role="button"

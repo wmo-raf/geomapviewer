@@ -177,8 +177,8 @@ class LayerUpdate extends PureComponent {
         const urls = tileJson?.urls || {};
         const timestamps = tileJson?.timestamps || [];
 
-        setCogUrls({ [layerId]: urls });
         registerCogColorFunctions(urls, layer.colorRamp);
+        setCogUrls({ [layerId]: urls });
 
         if (multiTemporal) {
           this.processTimestamps(timestamps);

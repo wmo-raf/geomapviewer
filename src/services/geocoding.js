@@ -1,5 +1,3 @@
-import { all, spread } from "axios";
-
 import { nominatimGeocodingRequest } from "@/utils/request";
 
 import { POLITICAL_BOUNDARIES } from "@/data/layers";
@@ -45,23 +43,19 @@ export const fetchGeocodeLocations = (
   lang = "en",
   cancelToken
 ) => {
-  return all([
-    nominatimGeocodingRequest
-      .get(
-        `/search?q=${searchQuery}&format=geojson&&viewbox=${EA_BBOX.toString()}&bounded=1`,
-        {
-          cancelToken,
-        }
-      )
-      .then((res) => {
-        const features =
-          res?.data?.features && parseNominatimRes(res.data.features);
-        return features;
-      })
-      .catch((err) => {
-        return [];
-      }),
-  ]);
+  return nominatimGeocodingRequest
+    .get(
+      `/search?q=${searchQuery}&format=geojson&&viewbox=${EA_BBOX.toString()}&bounded=1`,
+      {
+        cancelToken,
+      }
+    )
+    .then((res) => {
+      const features =
+        res?.data?.features && parseNominatimRes(res.data.features);
+      return features || [];
+    })
+    .catch(() => []);
 };
 
 export const fetchReverseGeocodePoint = ({ lat, lng, cancelToken }) => {
