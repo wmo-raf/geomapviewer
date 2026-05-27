@@ -15,11 +15,6 @@ import food_security from "@/assets/icons/famine.svg?sprite";
 import alert from "@/assets/icons/alert.svg?sprite";
 import satellite from "@/assets/icons/satellite.svg?sprite";
 import warning from "@/assets/icons/warning.svg?sprite";
-import fire from "@/assets/icons/fires-flame.svg?sprite";
-import vegetation from "@/assets/icons/trees.svg?sprite";
-import forecast from "@/assets/icons/forecast.svg?sprite";
-import climate from "@/assets/icons/climate.svg?sprite";
-import profile from "@/assets/icons/profile.svg?sprite";
 
 export default {
   rainfall,
@@ -38,19 +33,5 @@ export default {
   waterdrop,
   alert,
   satellite,
-  "icon-warning": warning,
-  "icon-heavy-rain": rainfall,
-  "icon-heatwave": climate_change,
-  "icon-violent-wind": cyclone,
-  "icon-satellite-dish": satellite,
-  "icon-flood": floods,
-  "icon-drought": drought,
-  "icon-water-source": waterdrop,
-  "icon-environment": env,
-  "icon-fire": fire,
-  "icon-snippet": vegetation,
-  "icon-humanitarian-programme-cycle": forecast,
-  "icon-boat": waterdrop,
-  "icon-site": climate,
-  "icon-group": profile,
+  warning
 };
