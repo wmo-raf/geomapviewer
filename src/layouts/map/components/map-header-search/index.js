@@ -3,7 +3,11 @@ import { createSelector, createStructuredSelector } from "reselect";
 import sortBy from "lodash/sortBy";
 
 import { handleClickLocation } from "@/components/map-menu/actions";
-import { setMapSettings } from "@/components/map/actions";
+import { setMenuSettings } from "@/components/map-menu/actions";
+import {
+  setMapSettings,
+  setMapInteractions,
+} from "@/components/map/actions";
 import { setModalMetaSettings } from "@/components/modals/meta/actions";
 import { getActiveDatasetsFromState } from "@/components/map/selectors";
 import { selectActiveLang, translateText } from "@/utils/lang";
@@ -42,6 +46,11 @@ const mergeProps = (stateProps, dispatchProps, ownProps) => {
     ...ownProps,
     ...restState,
     handleClickLocation: (loc) => dispatch(handleClickLocation(loc)),
+    handleClickCoordinate: ({ lat, lng }) => {
+      dispatch(setMapSettings({ center: { lat, lng }, zoom: 12 }));
+      dispatch(setMapInteractions({ features: [], lngLat: [lng, lat] }));
+      dispatch(setMenuSettings({ menuSection: "" }));
+    },
     onToggleDataset: ({ dataset, layer }, enable) => {
       const current = activeDatasets || [];
 

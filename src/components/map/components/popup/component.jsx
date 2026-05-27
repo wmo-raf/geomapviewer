@@ -46,11 +46,17 @@ class Popup extends Component {
     }
   }
 
+  isClickedPointMode = () => {
+    const { interactionsOptions } = this.props;
+    const noLayerInteraction =
+      !interactionsOptions || interactionsOptions.length === 0;
+    return this.state.useClickedPoint || noLayerInteraction;
+  };
+
   handleClickAction = (selected) => {
     const { longitude, latitude, onClickAnalysis } = this.props;
-    const { useClickedPoint } = this.state;
 
-    if (useClickedPoint) {
+    if (this.isClickedPointMode()) {
       onClickAnalysis({
         isPoint: true,
         latlng: { lat: latitude, lng: longitude },
@@ -118,11 +124,13 @@ class Popup extends Component {
     }
 
     const interactionOptionsWithMapPoint = [
-      ...interactionsOptions,
-      ...[{ label: "Clicked Point", value: "map-clicked-point" }],
+      ...(interactionsOptions || []),
+      { label: "Clicked Point", value: "map-clicked-point" },
     ];
 
-    const hasManyInteractions = interactionOptionsWithMapPoint?.length > 1;
+    const hasManyInteractions = interactionOptionsWithMapPoint.length > 1;
+
+    const showClickedPoint = this.isClickedPointMode();
 
     const { isAoi, isBoundary, isPoint, isLayer, isWmsFeatureInfo } =
       selected || {};
@@ -145,7 +153,7 @@ class Popup extends Component {
           <div className="title">{interactionOptionSelected.label}</div>
         )}
 
-        {useClickedPoint ? (
+        {showClickedPoint ? (
           <PointSentence
             onAnalyze={this.handleClickAction}
             lat={latitude}

@@ -6,6 +6,7 @@ import debounce from "lodash/debounce";
 import Icon from "@/components/ui/icon";
 import LayerToggle from "@/components/map/components/legend/components/layer-toggle";
 import { deburrUpper } from "@/utils/strings";
+import { parseCoordinate } from "@/utils/location";
 import { fetchGeocodeNominatim } from "@/services/geocoding";
 import { cancelToken } from "@/utils/request";
 
@@ -22,6 +23,7 @@ class MapHeaderSearch extends Component {
   state = {
     query: "",
     locations: [],
+    coordinate: null,
     loading: false,
     open: false,
   };
@@ -66,16 +68,46 @@ class MapHeaderSearch extends Component {
   handleChange = (e) => {
     const value = e.target.value;
     const trimmed = value.trim();
-    if (trimmed) {
-      this.setState({ query: value, open: true, loading: true });
-      this.debouncedSearch(trimmed);
-    } else {
+
+    if (!trimmed) {
       this.debouncedSearch.cancel();
       if (this.searchFetch) {
         this.searchFetch.cancel("Search cleared");
       }
-      this.setState({ query: value, locations: [], loading: false, open: true });
+      this.setState({
+        query: value,
+        locations: [],
+        coordinate: null,
+        loading: false,
+        open: true,
+      });
+      return;
     }
+
+    const coordinate = parseCoordinate(trimmed);
+
+    if (coordinate) {
+      this.debouncedSearch.cancel();
+      if (this.searchFetch) {
+        this.searchFetch.cancel("Coordinate detected");
+      }
+      this.setState({
+        query: value,
+        coordinate,
+        locations: [],
+        loading: false,
+        open: true,
+      });
+      return;
+    }
+
+    this.setState({
+      query: value,
+      coordinate: null,
+      open: true,
+      loading: true,
+    });
+    this.debouncedSearch(trimmed);
   };
 
   handleClear = () => {
@@ -83,7 +115,13 @@ class MapHeaderSearch extends Component {
     if (this.searchFetch) {
       this.searchFetch.cancel("Search cleared");
     }
-    this.setState({ query: "", locations: [], loading: false, open: false });
+    this.setState({
+      query: "",
+      locations: [],
+      coordinate: null,
+      loading: false,
+      open: false,
+    });
   };
 
   handleFocus = () => {
@@ -97,6 +135,13 @@ class MapHeaderSearch extends Component {
     this.setState({ open: false });
   };
 
+  handleClickCoordinate = () => {
+    const { coordinate } = this.state;
+    if (!coordinate) return;
+    this.props.handleClickCoordinate(coordinate);
+    this.setState({ open: false });
+  };
+
   getFilteredDatasets() {
     const { datasets } = this.props;
     const { query } = this.state;
@@ -107,15 +152,43 @@ class MapHeaderSearch extends Component {
         (d) =>
           (d.name && deburrUpper(d.name).includes(term)) ||
           (d.localeName && deburrUpper(d.localeName).includes(term)) ||
-          (d.description && deburrUpper(d.description).includes(term))
+          (d.summary && deburrUpper(d.summary).includes(term))
       )
       .slice(0, MAX_DATASETS);
   }
 
   renderDropdown() {
-    const { query, locations, loading, open } = this.state;
+    const { query, locations, loading, open, coordinate } = this.state;
 
     if (!open || !query.trim()) return null;
+
+    if (coordinate) {
+      const { lat, lng } = coordinate;
+      return (
+        <div className="map-header-search__dropdown">
+          <div className="dropdown-section">
+            <div className="dropdown-section__title">Go to coordinate</div>
+            <ul className="dropdown-list">
+              <li>
+                <button
+                  type="button"
+                  className="dropdown-item"
+                  onClick={this.handleClickCoordinate}
+                >
+                  <Icon
+                    icon={locationIcon}
+                    className="dropdown-item__icon"
+                  />
+                  <span className="dropdown-item__label">
+                    {lat.toFixed(5)}, {lng.toFixed(5)}
+                  </span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      );
+    }
 
     const filteredDatasets = this.getFilteredDatasets();
     const hasLocations = locations && locations.length > 0;
@@ -192,7 +265,7 @@ class MapHeaderSearch extends Component {
           <input
             type="text"
             className="map-header-search__input"
-            placeholder="Search locations and datasets"
+            placeholder="Search locations, coordinates and datasets"
             value={query}
             onChange={this.handleChange}
             onFocus={this.handleFocus}
@@ -218,6 +291,7 @@ MapHeaderSearch.propTypes = {
   datasets: PropTypes.array,
   lang: PropTypes.string,
   handleClickLocation: PropTypes.func.isRequired,
+  handleClickCoordinate: PropTypes.func.isRequired,
   onToggleDataset: PropTypes.func.isRequired,
   onInfoClick: PropTypes.func.isRequired,
 };
