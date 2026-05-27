@@ -34,4 +34,4 @@ jobs:
           push: true
           tags: |
             ghcr.io/wmo-raf/geomapviewer:${{ github.ref_name }}
-            ghcr.io/wmo-raf/geomapviewer:latest
+            ${{ !github.event.release.prerelease && 'ghcr.io/wmo-raf/geomapviewer:latest' || '' }}
