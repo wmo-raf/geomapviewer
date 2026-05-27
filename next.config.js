@@ -39,18 +39,15 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   trailingSlash: true,
-  basePath: process.env.BASE_URL_PATH ? process.env.BASE_URL_PATH : undefined,
-  assetPrefix: process.env.ASSET_PREFIX ? process.env.ASSET_PREFIX : undefined,
+  // Expose env vars to the browser for local development (npm run dev).
+  // In Docker these are overridden at runtime via window.RUNTIME_CONFIG.
   env: {
-    DEBUG: process.env.DEBUG ?? "",
-    FEATURE_ENV: process.env.FEATURE_ENV ?? "",
-    CMS_API: process.env.CMS_API ?? "",
-    ANALYTICS_PROPERTY_ID: process.env.ANALYTICS_PROPERTY_ID ?? "",
-    BITLY_TOKEN: process.env.BITLY_TOKEN ?? "",
-    GOOGLE_CUSTOM_SEARCH_CX: process.env.GOOGLE_CUSTOM_SEARCH_CX ?? "",
-    GOOGLE_SEARCH_API_KEY: process.env.GOOGLE_SEARCH_API_KEY ?? "",
-    BASE_URL_PATH: process.env.BASE_URL_PATH ?? "",
-    ASSET_PREFIX: process.env.ASSET_PREFIX ?? "",
+    CMS_API: process.env.CMS_API,
+    ANALYTICS_PROPERTY_ID: process.env.ANALYTICS_PROPERTY_ID,
+    BASE_PATH: process.env.BASE_PATH,
+    BITLY_TOKEN: process.env.BITLY_TOKEN,
+    GOOGLE_CUSTOM_SEARCH_CX: process.env.GOOGLE_CUSTOM_SEARCH_CX,
+    GOOGLE_SEARCH_API_KEY: process.env.GOOGLE_SEARCH_API_KEY,
   },
 };
 

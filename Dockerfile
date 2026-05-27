@@ -1,57 +1,55 @@
-# Stage 1: Build
-FROM node:16.16.0-bullseye-slim AS builder
+# syntax=docker/dockerfile:1.5
 
-RUN apt-get update && \
-    apt-get install -y \
-        zlib1g-dev \
-        libpng-dev \
-        libgl1 \
-        libxi6
+############################
+# Stage 1: Builder
+############################
+FROM node:20-bookworm-slim AS builder
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    zlib1g-dev \
+    libpng-dev \
+    libgl1 \
+    libxi6 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-# WORKDIR /app/geomapviewer-main
-# COPY . .
-ADD https://github.com/wmo-raf/geomapviewer/archive/refs/heads/main.tar.gz ./
-RUN tar -xzf ./main.tar.gz -C ./
+
+# Copy local project
+COPY . /app/geomapviewer-main
+
 WORKDIR /app/geomapviewer-main
 
-# Env Variables that should be available at build time
-ARG ANALYTICS_PROPERTY_ID
-ENV ANALYTICS_PROPERTY_ID $ANALYTICS_PROPERTY_ID
+# Install dependencies with caching
+RUN --mount=type=cache,target=/root/.yarn \
+    YARN_CACHE_FOLDER=/root/.yarn \
+    yarn --frozen-lockfile --network-timeout=100000 
 
-ARG BITLY_TOKEN
-ENV BITLY_TOKEN $BITLY_TOKEN
-
-ARG DEBUG
-ENV DEBUG $DEBUG
-
-ARG FEATURE_ENV
-ENV FEATURE_ENV $FEATURE_ENV
-
-ARG GOOGLE_CUSTOM_SEARCH_CX
-ENV GOOGLE_CUSTOM_SEARCH_CX $GOOGLE_CUSTOM_SEARCH_CX
-
-ARG GOOGLE_SEARCH_API_KEY
-ENV GOOGLE_SEARCH_API_KEY $GOOGLE_SEARCH_API_KEY
-
-ARG BASE_PATH
-ENV BASE_PATH $BASE_PATH
-
-ARG CMS_API
-ENV CMS_API $CMS_API
-
-# Install packages
-RUN yarn install
-
-# Build
+# Build Next.js app
+ENV NODE_ENV=production
 RUN yarn build
 
-# Stage 2: run
-FROM node:16.16.0-bullseye-slim
+
+############################
+# Stage 2: Runtime
+############################
+FROM node:20-bookworm-slim
+
 WORKDIR /app
+
+# Copy build artifacts
 COPY --from=builder /app/geomapviewer-main/.next ./.next
 COPY --from=builder /app/geomapviewer-main/public ./public
 COPY --from=builder /app/geomapviewer-main/node_modules ./node_modules
 COPY --from=builder /app/geomapviewer-main/package.json ./
 
-CMD ["yarn", "start"]
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Copy entrypoint
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
+EXPOSE 3000
+
+ENTRYPOINT ["./docker-entrypoint.sh"]

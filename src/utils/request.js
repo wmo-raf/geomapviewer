@@ -1,6 +1,7 @@
 import axios from "axios";
+import { getRuntimeConfig } from "@/utils/runtime-config";
 
-import { CMS_API } from "@/utils/apis";
+const { CMS_API } = getRuntimeConfig();
 
 const isServer = typeof window === "undefined";
 
