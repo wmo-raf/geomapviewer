@@ -39,12 +39,6 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   trailingSlash: true,
-  basePath: process.env.BASE_URL_PATH ? process.env.BASE_URL_PATH : undefined,
-  assetPrefix: process.env.ASSET_PREFIX ? process.env.ASSET_PREFIX : undefined,
-  env: {
-    BASE_URL_PATH: process.env.BASE_URL_PATH,
-    ASSET_PREFIX: process.env.ASSET_PREFIX,
-  },
 };
 
 module.exports = () => {

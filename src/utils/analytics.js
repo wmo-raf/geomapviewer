@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import ReactGA from "react-ga";
+import { getRuntimeConfig } from "@/utils/runtime-config";
 
 // import { getAgreedCookies } from '@/utils/cookies';
 
@@ -8,8 +9,9 @@ const isServer = typeof window !== "undefined";
 
 export const initAnalytics = () => {
   if (isServer) {
+    const { ANALYTICS_PROPERTY_ID } = getRuntimeConfig();
     window.ANALYTICS_INITIALIZED = true;
-    ReactGA.initialize(process.env.ANALYTICS_PROPERTY_ID);
+    ReactGA.initialize(ANALYTICS_PROPERTY_ID);
   }
 };
 
