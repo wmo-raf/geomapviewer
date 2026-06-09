@@ -10,6 +10,7 @@ import {
 } from "@/components/map/actions";
 import { setModalMetaSettings } from "@/components/modals/meta/actions";
 import { getActiveDatasetsFromState } from "@/components/map/selectors";
+import { selectConfigBounds } from "@/providers/config-provider/selectors";
 import { selectActiveLang, translateText } from "@/utils/lang";
 
 import Component from "./component";
@@ -36,6 +37,7 @@ const mapStateToProps = createStructuredSelector({
   datasets: getDatasetsWithActive,
   lang: selectActiveLang,
   activeDatasets: getActiveDatasetsFromState,
+  bounds: selectConfigBounds,
 });
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {
