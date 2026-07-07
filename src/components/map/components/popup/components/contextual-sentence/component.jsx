@@ -26,7 +26,7 @@ const ContextualSentence = ({
       />
       <Button
         onClick={() => {
-          setMapSettings({ drawing: true });
+          setMapSettings({ drawing: true, capAlertActive: false });
           setAnalysisSettings({ showDraw: true });
           setMainMapSettings({ showAnalysis: true });
         }}

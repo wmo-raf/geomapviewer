@@ -19,6 +19,7 @@ class CapAlertControl extends PureComponent {
     capConfig: PropTypes.object,
     loggedIn: PropTypes.bool,
     setMapSettings: PropTypes.func,
+    setMainMapSettings: PropTypes.func,
   };
 
   get enabled() {
@@ -32,17 +33,20 @@ class CapAlertControl extends PureComponent {
   }
 
   handleToggle = () => {
-    const { capAlertActive, setMapSettings } = this.props;
+    const { capAlertActive, setMapSettings, setMainMapSettings } = this.props;
 
     if (capAlertActive) {
       setMapSettings({ capAlertActive: false, capAlertGeometry: null });
     } else {
-      // starting the alert draw; make sure the analysis draw is off
+      // starting the alert draw: turn off the analysis draw and close the
+      // analysis panel so the alert flow isn't stuck in the geostore view left
+      // over from a previous analysis draw
       setMapSettings({
         capAlertActive: true,
         capAlertGeometry: null,
         drawing: false,
       });
+      setMainMapSettings({ showAnalysis: false });
     }
   };
 

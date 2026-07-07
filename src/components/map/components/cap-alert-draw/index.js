@@ -5,6 +5,7 @@ import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import { trackEvent } from "@/utils/analytics";
 
 import FreehandMode from "./freehand-mode";
+import { addExclusiveDraw, removeExclusiveDraw } from "../draw/exclusive-draw";
 
 // Lightweight polygon draw for the "Create alert" flow.
 // Deliberately NOT wired to the geostore: onComplete just hands the geometry
@@ -48,7 +49,7 @@ class CapAlertDraw extends PureComponent {
         displayControlsDefault: false,
       modes: { ...MapboxDraw.modes, draw_polygon: FreehandMode },
     });
-    map.addControl(this.draw);
+    addExclusiveDraw(map, this.draw);
     this.draw.changeMode("draw_polygon");
     map.on("draw.create", this.handleCreate);
     map.dragPan.disable();
@@ -71,7 +72,7 @@ class CapAlertDraw extends PureComponent {
     map.dragPan.enable();
 
     if (this.draw) {
-      map.removeControl(this.draw);
+      removeExclusiveDraw(map, this.draw);
       this.draw = null;
     }
   };

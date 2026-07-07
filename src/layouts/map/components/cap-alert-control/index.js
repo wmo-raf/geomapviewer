@@ -6,6 +6,8 @@ import {
   getCapAlertGeometry,
 } from "@/components/map/selectors";
 
+import { setMainMapSettings } from "@/layouts/map/actions";
+
 import Component from "./component";
 
 const mapStateToProps = (state) => ({
@@ -15,4 +17,6 @@ const mapStateToProps = (state) => ({
   loggedIn: state.auth && state.auth.data && state.auth.data.loggedIn,
 });
 
-export default connect(mapStateToProps, { setMapSettings })(Component);
+export default connect(mapStateToProps, { setMapSettings, setMainMapSettings })(
+  Component
+);
