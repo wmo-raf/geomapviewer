@@ -22,6 +22,7 @@ import Scale from "./components/scale";
 import Popup from "./components/popup";
 import MapToolTip from "./components/map-tooltip";
 import Draw from "./components/draw";
+import CapAlertDraw from "./components/cap-alert-draw";
 import Attributions from "./components/attributions";
 
 // Components
@@ -50,6 +51,9 @@ class RenderMap extends PureComponent {
       drawing,
       onDrawComplete,
       drawingMode,
+      capAlertActive,
+      capAlertGeometry,
+      onCapAlertComplete,
       mapSide,
       style,
     } = this.props;
@@ -70,7 +74,7 @@ class RenderMap extends PureComponent {
         maxZoom={maxZoom}
         style={style}
         getCursor={({ isHovering, isDragging }) => {
-          if (drawing) return "crosshair";
+          if (drawing || capAlertActive) return "crosshair";
           if (isDragging) return "grabbing";
           if (isHovering) return "pointer";
           return "grab";
@@ -93,6 +97,13 @@ class RenderMap extends PureComponent {
                   drawing={drawing}
                   onDrawComplete={onDrawComplete}
                   drawingMode={drawingMode}
+                />
+                {/* CREATE ALERT DRAWING (geostore-free) */}
+                <CapAlertDraw
+                  map={map}
+                  active={capAlertActive}
+                  geometry={capAlertGeometry}
+                  onComplete={onCapAlertComplete}
                 />
                 {/* SCALE */}
                 <Scale className="map-scale" map={map} viewport={viewport} />
@@ -136,6 +147,8 @@ class MapComponent extends Component {
     minZoom: PropTypes.number.isRequired,
     maxZoom: PropTypes.number.isRequired,
     drawing: PropTypes.bool,
+    capAlertActive: PropTypes.bool,
+    capAlertGeometry: PropTypes.object,
     loading: PropTypes.bool,
     loadingMessage: PropTypes.string,
     basemap: PropTypes.object,
@@ -476,13 +489,15 @@ class MapComponent extends Component {
   onClick = (e) => {
     const {
       drawing,
+      capAlertActive,
       clearMapInteractions,
       setMapInteractions,
       addMapInteraction,
       activeLayers,
     } = this.props;
 
-    if (drawing) {
+    // while drawing (analysis or alert), let the draw canvas own the clicks
+    if (drawing || capAlertActive) {
       this.setState({ drawClicks: this.state.drawClicks + 1 });
       return;
     }
@@ -761,6 +776,10 @@ class MapComponent extends Component {
     this.setState({ drawClicks: 0 });
   }
 
+  handleCapAlertComplete = (geometry) => {
+    this.props.setMapSettings({ capAlertGeometry: geometry });
+  };
+
   render() {
     const {
       className,
@@ -777,6 +796,8 @@ class MapComponent extends Component {
       onClickAnalysis,
       onDrawComplete,
       drawingMode,
+      capAlertActive,
+      capAlertGeometry,
       comparing,
     } = this.props;
 
@@ -803,7 +824,11 @@ class MapComponent extends Component {
 
     return (
       <div
-        className={cx("c-map", { "no-pointer-events": drawing }, className)}
+        className={cx(
+          "c-map",
+          { "no-pointer-events": drawing || capAlertActive },
+          className
+        )}
         style={{ backgroundColor: basemap && basemap.color }}
       >
         {comparing ? (
@@ -858,6 +883,9 @@ class MapComponent extends Component {
             drawing={drawing}
             onDrawComplete={onDrawComplete}
             drawingMode={drawingMode}
+            capAlertActive={capAlertActive}
+            capAlertGeometry={capAlertGeometry}
+            onCapAlertComplete={this.handleCapAlertComplete}
           />
         )}
 

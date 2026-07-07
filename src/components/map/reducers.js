@@ -38,6 +38,9 @@ export const initialState = {
     comparing: false,
     activeCompareSide: null,
     drawingMode: "draw_polygon",
+    // "Create alert" flow: lightweight draw, decoupled from the geostore.
+    capAlertActive: false,
+    capAlertGeometry: null,
     mapBounds: [],
     datasets: [
       // admin boundaries

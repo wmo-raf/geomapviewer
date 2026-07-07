@@ -23,6 +23,7 @@ import MapMenu from "@/components/map-menu";
 
 import DataAnalysisMenu from "./components/data-analysis-menu";
 import MapControlButtons from "./components/map-controls";
+import CapAlertControl from "./components/cap-alert-control";
 import MapHeader from "./components/map-header";
 
 import "./styles.scss";
@@ -113,6 +114,7 @@ class MainMapComponent extends PureComponent {
                 />
               </>
             </Mobile>
+            <CapAlertControl />
           </>
         )}
         <DatasetsProvider />

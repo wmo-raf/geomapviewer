@@ -166,6 +166,16 @@ export const getDrawingMode = createSelector(
   (settings) => settings.drawingMode
 );
 
+export const getCapAlertActive = createSelector(
+  [getMapSettings],
+  (settings) => settings.capAlertActive
+);
+
+export const getCapAlertGeometry = createSelector(
+  [getMapSettings],
+  (settings) => settings.capAlertGeometry
+);
+
 export const getCanBound = createSelector(
   getMapSettings,
   (settings) => settings.canBound
@@ -835,6 +845,8 @@ export const getMapProps = createStructuredSelector({
   mapRoads: getMapRoads,
   drawing: getDrawing,
   drawingMode: getDrawingMode,
+  capAlertActive: getCapAlertActive,
+  capAlertGeometry: getCapAlertGeometry,
   comparing: getComparing,
   canBound: getCanBound,
   geostoreBbox: getGeostoreBbox,

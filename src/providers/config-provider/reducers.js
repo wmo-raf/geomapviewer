@@ -16,6 +16,7 @@ export const initialState = {
   disclaimerText: "",
   enableMyAccount: false,
   allowSignups: false,
+  capConfig: null,
 };
 
 const setConfigLoading = (state, { payload }) => ({
