@@ -4,7 +4,7 @@ import MapboxDraw from "@mapbox/mapbox-gl-draw";
 
 import { trackEvent } from "@/utils/analytics";
 
-import drawConfig from "../draw/config";
+import FreehandMode from "./freehand-mode";
 
 // Lightweight polygon draw for the "Create alert" flow.
 // Deliberately NOT wired to the geostore: onComplete just hands the geometry
@@ -44,10 +44,14 @@ class CapAlertDraw extends PureComponent {
   start = () => {
     const { map } = this.props;
 
-    this.draw = new MapboxDraw({ ...drawConfig });
+    this.draw = new MapboxDraw({
+        displayControlsDefault: false,
+      modes: { ...MapboxDraw.modes, draw_polygon: FreehandMode },
+    });
     map.addControl(this.draw);
     this.draw.changeMode("draw_polygon");
     map.on("draw.create", this.handleCreate);
+    map.dragPan.disable();
   };
 
   reset = () => {
@@ -55,12 +59,16 @@ class CapAlertDraw extends PureComponent {
 
     this.draw.deleteAll();
     this.draw.changeMode("draw_polygon");
+    // simple_select (shown under the confirm popup) re-enables maplibre's native
+    // dragPan on mousemove, so re-disable it when re-entering the freehand draw.
+    this.props.map.dragPan.disable();
   };
 
   stop = () => {
     const { map } = this.props;
 
     map.off("draw.create", this.handleCreate);
+    map.dragPan.enable();
 
     if (this.draw) {
       map.removeControl(this.draw);

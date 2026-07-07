@@ -99,7 +99,7 @@ class CapAlertControl extends PureComponent {
           onClick={this.handleToggle}
           tooltip={{
             text: capAlertActive
-              ? "Click on the map to draw the area"
+              ? "Click and drag on the map to draw the area"
               : "Draw an area to create an alert",
             position: "left",
           }}

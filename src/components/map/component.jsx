@@ -72,9 +72,11 @@ class RenderMap extends PureComponent {
         attributionControl={false}
         minZoom={minZoom}
         maxZoom={maxZoom}
+        dragPan={!capAlertActive}
+        dragRotate={!capAlertActive}
         style={style}
         getCursor={({ isHovering, isDragging }) => {
-          if (drawing || capAlertActive) return "crosshair";
+          if (drawing || (capAlertActive && !capAlertGeometry)) return "crosshair";
           if (isDragging) return "grabbing";
           if (isHovering) return "pointer";
           return "grab";
