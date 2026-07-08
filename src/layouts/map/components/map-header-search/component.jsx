@@ -56,7 +56,12 @@ class MapHeaderSearch extends Component {
       this.searchFetch.cancel("Cancelling previous search");
     }
     this.searchFetch = cancelToken();
-    fetchGeocodeNominatim(value, this.props.lang, this.searchFetch.token)
+    fetchGeocodeNominatim(
+      value,
+      this.props.lang,
+      this.props.bounds,
+      this.searchFetch.token
+    )
       .then((locations) => {
         this.setState({ locations: locations || [], loading: false });
       })
@@ -290,6 +295,7 @@ class MapHeaderSearch extends Component {
 MapHeaderSearch.propTypes = {
   datasets: PropTypes.array,
   lang: PropTypes.string,
+  bounds: PropTypes.array,
   handleClickLocation: PropTypes.func.isRequired,
   handleClickCoordinate: PropTypes.func.isRequired,
   onToggleDataset: PropTypes.func.isRequired,

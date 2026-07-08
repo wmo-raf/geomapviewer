@@ -2,8 +2,6 @@ import { nominatimGeocodingRequest } from "@/utils/request";
 
 import { POLITICAL_BOUNDARIES } from "@/data/layers";
 
-const EA_BBOX = [21.838949, -11.745695, 51.415695, 23.145147];
-
 const parseNominatimRes = (data) =>
   data.map((f) => {
     return {
@@ -19,15 +17,21 @@ const parseNominatimRes = (data) =>
 export const fetchGeocodeNominatim = (
   searchQuery = "",
   lang = "en",
+  bounds,
   cancelToken
 ) => {
+  const params = {
+    q: searchQuery,
+    format: "geojson",
+  };
+
+  // restrict results to the configured map bounds when available
+  if (bounds && bounds.length) {
+    params.viewbox = bounds.toString();
+  }
+
   return nominatimGeocodingRequest
-    .get(
-      `/search?q=${searchQuery}&format=geojson&&viewbox=${EA_BBOX.toString()}&bounded=1`,
-      {
-        cancelToken,
-      }
-    )
+    .get("/search", { params, cancelToken })
     .then((res) => {
       const features =
         res?.data?.features && parseNominatimRes(res.data.features);
