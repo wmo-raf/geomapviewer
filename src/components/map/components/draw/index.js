@@ -9,6 +9,7 @@ import { trackEvent } from "@/utils/analytics";
 import "./styles.scss";
 
 import drawConfig from "./config";
+import { addExclusiveDraw, removeExclusiveDraw } from "./exclusive-draw";
 
 class Draw extends PureComponent {
   state = {
@@ -43,38 +44,43 @@ class Draw extends PureComponent {
 
     this.draw = new MapboxDraw({ ...drawConfig, modes: modes });
 
-    map.addControl(this.draw);
+    addExclusiveDraw(map, this.draw);
 
     if (this.draw.changeMode) {
       this.draw.changeMode(drawingMode);
     }
 
-    map.on("draw.create", (e) => {
-      const geoJSON = e.features && e.features[0];
-      const { featureId } = this.state;
-      const { id } = geoJSON;
+    map.on("draw.create", this.handleDrawCreate);
+  };
 
-      if (id !== featureId) {
-        if (geoJSON) {
-          // we set the drawn feature id to state to avoid duplicates features being sent. 
-          // Not sure why this event is fired multiple times when drawing polygon
-          this.setState({ featureId: id }, () => {
-            onDrawComplete(geoJSON);
-            trackEvent({
-              category: "Map analysis",
-              action: "User drawn shape",
-              label: "Complete",
-            });
+  // kept as an instance ref so closeDrawing removes only this listener, not the
+  // cap-alert draw's draw.create handler that shares the same map event
+  handleDrawCreate = (e) => {
+    const { onDrawComplete } = this.props;
+    const geoJSON = e.features && e.features[0];
+    const { featureId } = this.state;
+    const { id } = geoJSON;
+
+    if (id !== featureId) {
+      if (geoJSON) {
+        // we set the drawn feature id to state to avoid duplicates features being sent.
+        // Not sure why this event is fired multiple times when drawing polygon
+        this.setState({ featureId: id }, () => {
+          onDrawComplete(geoJSON);
+          trackEvent({
+            category: "Map analysis",
+            action: "User drawn shape",
+            label: "Complete",
           });
-        }
+        });
       }
-    });
+    }
   };
 
   closeDrawing = () => {
     const { map } = this.props;
-    map.off("draw.create");
-    map.removeControl(this.draw);
+    map.off("draw.create", this.handleDrawCreate);
+    removeExclusiveDraw(map, this.draw);
   };
 
   render() {

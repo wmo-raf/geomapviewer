@@ -25,6 +25,7 @@ export const fetchConfig = createThunkAction(
         enableMyAccount,
         allowSignups,
         navigation,
+        capConfig,
       } = config;
 
       const sections = categories
@@ -56,6 +57,7 @@ export const fetchConfig = createThunkAction(
         enableMyAccount,
         allowSignups,
         navigation: navigation || [],
+        capConfig: capConfig || null,
         sections: sections,
         basemaps: basemaps.reduce((all, item) => {
           item.value = item.label;

@@ -107,7 +107,7 @@ class ChoseAnalysis extends PureComponent {
           className="draw-menu-button"
           theme={drawing ? "theme-button-light wide" : "wide"}
           onClick={() => {
-            setMapSettings({ drawing: !drawing });
+            setMapSettings({ drawing: !drawing, capAlertActive: false });
             if (!drawing) {
               setMenuSettings({ menuSection: "" });
             }

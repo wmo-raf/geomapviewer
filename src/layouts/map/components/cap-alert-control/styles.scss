@@ -1,0 +1,135 @@
+@import "@/styles/settings.scss";
+@import "@/styles/utils.scss";
+
+.c-cap-alert-control {
+  position: absolute;
+  top: rem(60px);
+  right: rem(15px);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  .cap-alert-icon {
+    width: rem(18px);
+    height: rem(18px);
+  }
+
+  .cap-alert-btn {
+    display: flex;
+    align-items: center;
+    gap: rem(8px);
+    padding: rem(8px) rem(12px);
+    background-color: $white;
+    border-radius: rem(4px);
+    box-shadow: 0 1px 2px rgba($black, 0.25);
+    font-size: rem(13px);
+    font-weight: 500;
+    color: $slate;
+
+    .button-wrapper {
+      display: flex;
+      align-items: center;
+      gap: rem(8px);
+    }
+
+    &:hover {
+      background-color: darken($white, 6%);
+    }
+
+    // active = draw session running: red fill + a thin border with a red
+    // gradient beam running around it (rotating conic gradient masked to a
+    // 1px ring by the inset ::after fill)
+    &.--active {
+      position: relative;
+      z-index: 0;
+      overflow: hidden;
+      color: #b91c1c;
+
+      &::before {
+        content: "";
+        position: absolute;
+        z-index: -2;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(
+          from 0deg,
+          transparent 0deg,
+          transparent 260deg,
+          #b91c1c 330deg,
+          transparent 360deg
+        );
+        animation: cap-border-run 2.4s linear infinite;
+      }
+
+      &::after {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        inset: 1px;
+        border-radius: rem(3px);
+        background-color: white;
+      }
+    }
+  }
+
+  .cap-alert-popup {
+    margin-top: rem(8px);
+    padding: rem(12px);
+    width: rem(180px);
+    background-color: $white;
+    border-radius: rem(4px);
+    box-shadow: 0 2px 6px rgba($black, 0.3);
+
+    &__title {
+      margin: 0 0 rem(10px);
+      font-size: rem(13px);
+      font-weight: 600;
+      color: $slate;
+    }
+
+    &__actions {
+      display: flex;
+      flex-direction: column;
+      gap: rem(6px);
+    }
+
+    // compact pills like the overlay button; not full width
+    &__btn {
+      width: auto;
+      padding: rem(3px) rem(8px);
+      border-radius: rem(5px);
+      font-size: rem(12px);
+
+      .button-wrapper {
+        display: flex;
+        align-items: center;
+        gap: rem(8px);
+      }
+
+      // red look for the main action; start over / cancel keep the light
+      // theme's blue border + normal text
+      &--primary {
+        display: flex;
+        align-items: center;
+        gap: rem(8px);
+        background-color: #fee2e2;
+        color: #b91c1c;
+        border: none;
+
+        &:hover {
+          background-color: darken(#fee2e2, 6%);
+        }
+      }
+    }
+  }
+}
+
+// spin the conic gradient so the red beam runs around the thin border
+@keyframes cap-border-run {
+  to {
+    transform: rotate(360deg);
+  }
+}
