@@ -4,9 +4,8 @@ import cx from "classnames";
 
 import { trackEvent } from "@/utils/analytics";
 import Button from "@/components/ui/button";
-import Icon from "@/components/ui/icon";
 
-import alertIcon from "@/assets/icons/alert.svg?sprite";
+import capLogo from "@/assets/icons/CAPLogo.jpeg";
 
 import "./styles.scss";
 
@@ -108,12 +107,13 @@ class CapAlertControl extends PureComponent {
             position: "left",
           }}
         >
-          <Icon
-            icon={alertIcon}
+          <img
+            src={capLogo}
+            alt=""
             className={cx("cap-alert-icon", { "-active": capAlertActive })}
           />
           <span className="cap-alert-btn__label">
-            {capAlertActive ? "Drawing…" : "Create an alert"}
+            {capAlertActive ? "Drawing…" : "Draw an alert"}
           </span>
         </Button>
 
@@ -126,17 +126,24 @@ class CapAlertControl extends PureComponent {
                 className="cap-alert-popup__btn cap-alert-popup__btn--primary"
                 onClick={this.handleCreate}
               >
-                Create alert
+                <img
+                  src={capLogo}
+                  alt=""
+                  className="cap-alert-icon"
+                />
+                <span className="cap-alert-btn__label">
+                  Create alert
+                </span>
               </Button>
               <Button
-                theme="theme-button-grey"
+                theme="theme-button-light"
                 className="cap-alert-popup__btn"
                 onClick={this.handleRestart}
               >
                 Start over
               </Button>
               <Button
-                theme="theme-button-clear"
+                theme="theme-button-light"
                 className="cap-alert-popup__btn"
                 onClick={this.handleCancel}
               >
