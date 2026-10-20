@@ -1,8 +1,7 @@
-import { PureComponent, createRef } from "react";
+import { PureComponent } from "react";
 import bbox from "@turf/bbox";
 import { isEmpty } from "lodash";
 import { connect } from "react-redux";
-import { wrap } from "comlink";
 
 import * as ownActions from "./actions";
 import { getDatasetProps } from "./selectors";
@@ -15,8 +14,6 @@ const actions = {
 };
 
 class LayerUpdate extends PureComponent {
-  wmsWorkerRef = createRef();
-
   componentDidMount() {
     const { updateInterval } = this.props;
     this.doUpdate({ isInitial: true });
@@ -25,14 +22,6 @@ class LayerUpdate extends PureComponent {
       this.interval = setInterval(() => this.doUpdate({}), updateInterval);
     }
   }
-
-  initWmsWorker = () => {
-    if (!this.wmsWorkerRef.current) {
-      this.wmsWorkerRef.current = wrap(
-        new Worker(new URL("./wms-getcaps-worker.js", import.meta.url))
-      );
-    }
-  };
 
   componentWillUnmount() {
     if (this.interval) {
@@ -50,21 +39,18 @@ class LayerUpdate extends PureComponent {
       styles,
     } = layer;
 
-    this.initWmsWorker();
+    const styleName = legendFromCapabilities && Array.isArray(styles)
+      ? styles.join(',')
+      : null;
 
-    if (this.wmsWorkerRef.current) {
-      const styleName = legendFromCapabilities && Array.isArray(styles)
-        ? styles.join(',')
-        : null;
+    // loaded on demand: ogc-client is only needed by WMS layers, in the browser
+    const { getWmsLayerInfo } = await import("@/utils/wms");
 
-      return await this.wmsWorkerRef.current.wmsGetLayerInfoFromCapabilities(
-        getCapabilitiesUrl,
-        getCapabilitiesLayerName || layerName,
-        styleName
-      );
-    }
-
-    return {};
+    return getWmsLayerInfo(
+      getCapabilitiesUrl,
+      getCapabilitiesLayerName || layerName,
+      styleName
+    );
   };
 
   processTimestamps = (timestamps) => {

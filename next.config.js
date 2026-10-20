@@ -36,7 +36,7 @@ class SkipPreminifiedAssetsPlugin {
 
 const nextConfig = {
   // disable css-modules component styling
-  webpack(config, { isServer }) {
+  webpack(config, { isServer, webpack }) {
     config.module.rules.forEach((rule) => {
       const { oneOf } = rule;
       if (oneOf) {
@@ -81,6 +81,15 @@ const nextConfig = {
     config.infrastructureLogging = { level: "error" };
 
     config.resolve.fallback = { fs: false };
+
+    // OpenLayers is an optional peer dependency of ogc-client, only used for
+    // WMTS tile grids through a dynamic import that fails gracefully without it
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^ol\//,
+        contextRegExp: /[\\/]node_modules[\\/]@camptocamp[\\/]ogc-client[\\/]/,
+      })
+    );
 
     return config;
   },

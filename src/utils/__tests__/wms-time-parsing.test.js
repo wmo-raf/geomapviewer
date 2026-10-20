@@ -1,5 +1,5 @@
 /**
- * Tests for WMS TIME dimension parsing logic from src/utils/wms.js
+ * Tests for WMS capabilities reading from src/utils/wms.js, on top of ogc-client
  *
  * WMS 1.3.0 spec reference: OGC 06-042, Annex C (Table C.2) and Annex D.
  *
@@ -9,314 +9,239 @@
  *   min/max/resolution                An interval with bounds and resolution
  *   min1/max1/res1,min2/max2/res2,... A list of multiple intervals
  *   (and mixed combinations of the above)
- *
- * Annex D — ISO 8601 profile for WMS:
- *   Timestamps: ccyy-mm-ddThh:mm:ss.sssZ (precision may be reduced)
- *   Compact:    ccyymmdd (basic format without separators)
- *   Periods:    P[nY][nM][nD][T[nH][nM][nS]]
  */
 
+// a timezone with DST: the change on 2026-10-25 must not shift the timestamps
+process.env.TZ = "Europe/Paris";
+
 const {
-  parseISO8601Duration,
-  normalizeDate,
-  getValidTimestamps,
-  parseTimeValues,
   extractTimestamps,
+  extractLegendUrl,
+  getWmsLayerInfo,
 } = require("../wms");
 
-// Helper: builds a mock WMS layer object for extractTimestamps
-function mockLayer(timeValues) {
-  return { Dimension: [{ name: "time", values: timeValues }] };
+const WMS_URL = "https://example.com/wms";
+
+// Helper: builds a WMS 1.3.0 capabilities document, with a nested layer
+function capabilities(layerContent) {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<WMS_Capabilities version="1.3.0" xmlns="http://www.opengis.net/wms" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <Service><Name>WMS</Name><Title>Test</Title></Service>
+  <Capability>
+    <Layer>
+      <Title>Root</Title>
+      <Layer>
+        <Title>Group</Title>
+        <Layer queryable="1">
+          <Name>test</Name>
+          <Title>Test</Title>
+          ${layerContent}
+        </Layer>
+      </Layer>
+    </Layer>
+  </Capability>
+</WMS_Capabilities>`;
+}
+
+// Helper: reads a layer time dimension through ogc-client
+async function timestampsOf(dimensionValues, max) {
+  global.fetch = jest.fn(
+    async () =>
+      new Response(
+        capabilities(
+          `<Dimension name="time" units="ISO8601">${dimensionValues}</Dimension>`
+        ),
+        { headers: { "Content-Type": "text/xml" } }
+      )
+  );
+  const { WmsEndpoint } = require("@camptocamp/ogc-client");
+  const endpoint = await new WmsEndpoint(WMS_URL).isReady();
+  return extractTimestamps(endpoint.getLayerByName("test"), max);
 }
 
 // ===========================================================================
-//  normalizeDate
+//  extractTimestamps
 // ===========================================================================
 
-describe("normalizeDate", () => {
-  test("passes through extended ISO timestamps unchanged", () => {
-    expect(normalizeDate("2024-01-15T00:00:00Z")).toBe("2024-01-15T00:00:00Z");
-  });
-
-  test("passes through extended ISO dates unchanged", () => {
-    expect(normalizeDate("2024-01-15")).toBe("2024-01-15");
-  });
-
-  test("converts compact YYYYMMDD to extended format", () => {
-    expect(normalizeDate("19830101")).toBe("1983-01-01");
-  });
-
-  test("converts compact date 20260331", () => {
-    expect(normalizeDate("20260331")).toBe("2026-03-31");
-  });
-});
-
-// ===========================================================================
-//  parseISO8601Duration
-// ===========================================================================
-
-describe("parseISO8601Duration", () => {
-  test("P1D — 1 day", () => {
-    expect(parseISO8601Duration("P1D")).toBe(86400000);
-  });
-
-  test("P7D — 7 days", () => {
-    expect(parseISO8601Duration("P7D")).toBe(7 * 86400000);
-  });
-
-  test("PT15M — 15 minutes", () => {
-    expect(parseISO8601Duration("PT15M")).toBe(15 * 60 * 1000);
-  });
-
-  test("PT30M — 30 minutes", () => {
-    expect(parseISO8601Duration("PT30M")).toBe(30 * 60 * 1000);
-  });
-
-  test("PT1H — 1 hour", () => {
-    expect(parseISO8601Duration("PT1H")).toBe(3600000);
-  });
-
-  test("PT3H — 3 hours", () => {
-    expect(parseISO8601Duration("PT3H")).toBe(3 * 3600000);
-  });
-
-  test("PT6H — 6 hours", () => {
-    expect(parseISO8601Duration("PT6H")).toBe(6 * 3600000);
-  });
-
-  test("PT5M — 5 minutes", () => {
-    expect(parseISO8601Duration("PT5M")).toBe(5 * 60 * 1000);
-  });
-
-  test("PT30S — 30 seconds", () => {
-    expect(parseISO8601Duration("PT30S")).toBe(30000);
-  });
-
-  test("PT1.5S — 1.5 seconds (fractional)", () => {
-    expect(parseISO8601Duration("PT1.5S")).toBe(1500);
-  });
-
-  test("P1Y — 1 year", () => {
-    expect(parseISO8601Duration("P1Y")).toBeGreaterThan(364 * 86400000);
-  });
-
-  test("P1M — 1 month", () => {
-    expect(parseISO8601Duration("P1M")).toBeGreaterThan(27 * 86400000);
-  });
-});
-
-// ===========================================================================
-//  getValidTimestamps
-// ===========================================================================
-
-describe("getValidTimestamps", () => {
-  test("expands daily range", () => {
-    const result = getValidTimestamps(
-      "2024-01-01T00:00:00Z",
-      "2024-01-04T00:00:00Z",
-      "P1D"
-    );
-    expect(result).toHaveLength(3);
-    expect(result[0]).toContain("2024-01-01");
-    expect(result[2]).toContain("2024-01-03");
-  });
-
-  test("end time is exclusive", () => {
-    const result = getValidTimestamps(
-      "2024-01-01T00:00:00Z",
-      "2024-01-04T00:00:00Z",
-      "P1D"
-    );
-    expect(result).not.toContainEqual(expect.stringContaining("2024-01-04"));
-  });
-
-  test("handles compact dates", () => {
-    const result = getValidTimestamps("20240101", "20240104", "P1D");
-    expect(result).toHaveLength(3);
-    expect(result[0]).toContain("2024-01-01");
-  });
-});
-
-// ===========================================================================
-//  parseTimeValues — Format 1: comma-separated discrete values
-// ===========================================================================
-
-describe("parseTimeValues — comma-separated values", () => {
-  test("single ISO timestamp", () => {
-    const result = parseTimeValues("2024-01-15T00:00:00Z");
-    expect(result).toEqual(["2024-01-15T00:00:00Z"]);
-  });
-
-  test("multiple ISO timestamps (sorted on output)", () => {
-    const input =
-      "2024-03-01T00:00:00Z,2024-01-01T00:00:00Z,2024-02-01T00:00:00Z";
-    const result = parseTimeValues(input);
-    expect(result).toEqual([
-      "2024-01-01T00:00:00Z",
-      "2024-02-01T00:00:00Z",
-      "2024-03-01T00:00:00Z",
+describe("extractTimestamps", () => {
+  test("single value", async () => {
+    expect(await timestampsOf("2024-01-15T00:00:00Z")).toEqual([
+      "2024-01-15T00:00:00.000Z",
     ]);
   });
 
-  test("date-only values — spec allows reduced precision", () => {
-    const input = "2024-01-01,2024-01-02,2024-01-03";
-    const result = parseTimeValues(input);
-    expect(result).toHaveLength(3);
+  test("comma-separated values, sorted", async () => {
+    expect(
+      await timestampsOf("2024-03-01T00:00:00Z,2024-01-01T00:00:00Z")
+    ).toEqual(["2024-01-01T00:00:00.000Z", "2024-03-01T00:00:00.000Z"]);
   });
 
-  test("returns null for empty string", () => {
-    expect(parseTimeValues("")).toBeNull();
-    expect(parseTimeValues(null)).toBeNull();
-    expect(parseTimeValues(undefined)).toBeNull();
-  });
-});
-
-// ===========================================================================
-//  parseTimeValues — Format 2: single range start/end/period
-// ===========================================================================
-
-describe("parseTimeValues — single range", () => {
-  test("daily interval — P1D", () => {
-    const input = "1995-04-22T12:00Z/1995-04-25T12:00Z/P1D";
-    const result = parseTimeValues(input);
-    expect(result).toHaveLength(3);
-    expect(result[0]).toContain("1995-04-22");
-    expect(result[2]).toContain("1995-04-24");
+  test("interval, end included", async () => {
+    expect(
+      await timestampsOf("2024-01-01T00:00:00Z/2024-01-01T12:00:00Z/PT6H")
+    ).toEqual([
+      "2024-01-01T00:00:00.000Z",
+      "2024-01-01T06:00:00.000Z",
+      "2024-01-01T12:00:00.000Z",
+    ]);
   });
 
-  test("sub-daily PT15M — truncated to last 2 days", () => {
-    const input =
-      "2020-09-01T00:00:00.000Z/2026-04-04T10:15:00.000Z/PT15M";
-    const result = parseTimeValues(input);
-    // 2 days / 15 min = 192 timestamps
-    expect(result).toHaveLength(192);
-  });
-
-  test("sub-daily PT3H — truncated to last 2 days", () => {
-    const input =
-      "2026-03-30T03:00:00Z/2026-04-10T00:00:00Z/PT3H";
-    const result = parseTimeValues(input);
-    // 2 days / 3 hours = 16 timestamps
-    expect(result).toHaveLength(16);
-  });
-
-  test("large daily range", () => {
-    const input = "1996-01-01/2003-10-17/P1D";
-    const result = parseTimeValues(input);
-    expect(result.length).toBeGreaterThan(2800);
-  });
-});
-
-// ===========================================================================
-//  parseTimeValues — Format 3: compact dates (YYYYMMDD)
-// ===========================================================================
-
-describe("parseTimeValues — compact ISO dates", () => {
-  test("19830101/20260331/PT5M — compact dates with sub-daily interval", () => {
-    const input = "19830101/20260331/PT5M";
-    const result = parseTimeValues(input);
-    // Sub-daily -> limited to last 2 days before end date (2026-03-31)
-    // Exact count depends on timezone offset of subDays result
-    expect(result.length).toBeGreaterThan(500);
-    expect(result.length).toBeLessThanOrEqual(576);
-    // Dates should be valid ISO
-    expect(new Date(result[0]).toString()).not.toBe("Invalid Date");
-    // Last timestamps should be near 2026-03-31
-    expect(result[result.length - 1]).toContain("2026-03-30");
-  });
-
-  test("compact dates with daily interval", () => {
-    const input = "20240101/20240105/P1D";
-    const result = parseTimeValues(input);
-    expect(result).toHaveLength(4);
-    expect(result[0]).toContain("2024-01-01");
-    expect(result[3]).toContain("2024-01-04");
-  });
-});
-
-// ===========================================================================
-//  parseTimeValues — Mixed format: values + intervals
-// ===========================================================================
-
-describe("parseTimeValues — mixed values and intervals", () => {
-  test("real-world: single value + two intervals with different steps", () => {
-    const input =
-      "2026-03-30T00:00:00Z,2026-03-30T03:00:00Z/2026-04-10T00:00:00Z/PT3H,2026-04-10T06:00:00Z/2026-04-14T00:00:00Z/PT6H";
-    const result = parseTimeValues(input);
-
-    // First item: single value "2026-03-30T00:00:00Z"
-    expect(result).toContainEqual(
-      expect.stringContaining("2026-03-30T00:00:00")
+  test("interval with months", async () => {
+    const result = await timestampsOf(
+      "2024-01-01T00:00:00Z/2024-06-01T00:00:00Z/P1M"
     );
-
-    // Second item: PT3H interval (sub-daily -> 2 days limit)
-    // 2 days / 3h = 16 timestamps from that range
-
-    // Third item: PT6H interval (sub-daily -> 2 days limit)
-    // 2 days / 6h = 8 timestamps from that range
-
-    // Total: 1 + 16 + 8 = 25
-    expect(result).toHaveLength(25);
-
-    // Results are sorted chronologically
-    for (let i = 1; i < result.length; i++) {
-      expect(new Date(result[i]).getTime()).toBeGreaterThanOrEqual(
-        new Date(result[i - 1]).getTime()
-      );
-    }
-  });
-
-  test("multiple intervals without single values", () => {
-    const input =
-      "2024-01-01T00:00:00Z/2024-01-04T00:00:00Z/P1D,2024-06-01T00:00:00Z/2024-06-04T00:00:00Z/P1D";
-    const result = parseTimeValues(input);
-    // 3 + 3 = 6 timestamps
     expect(result).toHaveLength(6);
-    expect(result[0]).toContain("2024-01-01");
-    expect(result[5]).toContain("2024-06-03");
+    expect(result[5]).toBe("2024-06-01T00:00:00.000Z");
   });
 
-  test("single values mixed with intervals", () => {
-    const input =
-      "2024-01-15T00:00:00Z,2024-02-01T00:00:00Z/2024-02-04T00:00:00Z/P1D,2024-12-25T00:00:00Z";
-    const result = parseTimeValues(input);
-    // 1 + 3 + 1 = 5 timestamps
-    expect(result).toHaveLength(5);
-    expect(result[0]).toContain("2024-01-15");
-    expect(result[4]).toContain("2024-12-25");
+  test("mixed values and intervals from a real WMS server", async () => {
+    const result = await timestampsOf(
+      "2026-10-15T00:00:00Z,2026-10-15T03:00:00Z/2026-10-26T06:00:00Z/PT3H,2026-10-26T12:00:00Z/2026-10-30T00:00:00Z/PT6H"
+    );
+
+    // 1 value + 90 values every 3 hours + 15 values every 6 hours
+    expect(result).toHaveLength(106);
+    expect(result[0]).toBe("2026-10-15T00:00:00.000Z");
+    expect(result).toContain("2026-10-20T06:00:00.000Z");
+    expect(result).toContain("2026-10-26T06:00:00.000Z");
+    expect(result).toContain("2026-10-26T12:00:00.000Z");
+    expect(result[105]).toBe("2026-10-30T00:00:00.000Z");
+    // no timestamp shifted by the DST change
+    result.forEach((t) => expect(new Date(t).getUTCHours() % 3).toBe(0));
+  });
+
+  test("keeps the latest timestamps of a large interval", async () => {
+    const result = await timestampsOf(
+      "2024-01-01T00:00:00Z/2024-12-31T00:00:00Z/PT1H",
+      48
+    );
+    expect(result).toHaveLength(48);
+    expect(result[0]).toBe("2024-12-29T01:00:00.000Z");
+    expect(result[47]).toBe("2024-12-31T00:00:00.000Z");
+  });
+
+  test("keeps the latest timestamps across intervals", async () => {
+    const result = await timestampsOf(
+      "2024-01-01T00:00:00Z/2024-01-10T00:00:00Z/P1D,2024-01-10T00:00:00Z/2024-01-11T00:00:00Z/PT6H",
+      6
+    );
+    expect(result).toEqual([
+      "2024-01-09T00:00:00.000Z",
+      "2024-01-10T00:00:00.000Z",
+      "2024-01-10T06:00:00.000Z",
+      "2024-01-10T12:00:00.000Z",
+      "2024-01-10T18:00:00.000Z",
+      "2024-01-11T00:00:00.000Z",
+    ]);
+  });
+
+  test("ignores intervals with bounds ogc-client cannot parse", async () => {
+    expect(await timestampsOf("19830101/20260331/PT5M")).toEqual([]);
+  });
+
+  test("handles values read from the ogc-client cache, as ISO strings", () => {
+    const layer = {
+      timeDimension: {
+        values: [
+          "2024-01-01T00:00:00.000Z",
+          {
+            begin: "2024-01-02T00:00:00.000Z",
+            end: "2024-01-03T00:00:00.000Z",
+            period: { years: 0, months: 0, days: 1, hours: 0, minutes: 0, seconds: 0 },
+          },
+        ],
+      },
+    };
+    expect(extractTimestamps(layer)).toEqual([
+      "2024-01-01T00:00:00.000Z",
+      "2024-01-02T00:00:00.000Z",
+      "2024-01-03T00:00:00.000Z",
+    ]);
+  });
+
+  test("returns null without time dimension", () => {
+    expect(extractTimestamps({})).toBeNull();
+    expect(extractTimestamps(null)).toBeNull();
   });
 });
 
 // ===========================================================================
-//  extractTimestamps — integration with layer object
+//  extractLegendUrl
 // ===========================================================================
 
-describe("extractTimestamps — with layer object", () => {
-  test("extracts timestamps from layer Dimension", () => {
-    const layer = mockLayer(
-      "2024-01-01T00:00:00Z,2024-02-01T00:00:00Z,2024-03-01T00:00:00Z"
+describe("extractLegendUrl", () => {
+  const layer = {
+    styles: [
+      { name: "default", legendUrl: "https://example.com/default.png" },
+      { name: "Temperature", legendUrl: "https://example.com/temp.png" },
+    ],
+  };
+
+  test("returns the legend of the given style, case-insensitive", () => {
+    expect(extractLegendUrl(layer, "temperature")).toBe(
+      "https://example.com/temp.png"
     );
-    const result = extractTimestamps(layer);
-    expect(result).toHaveLength(3);
   });
 
-  test("returns null when no time dimension", () => {
-    const layer = { Dimension: [{ name: "elevation", values: "0/100/10" }] };
-    expect(extractTimestamps(layer)).toBeNull();
-  });
-
-  test("returns null when Dimension is missing", () => {
-    expect(extractTimestamps({})).toBeNull();
-  });
-
-  test("handles mixed format from real WMS server", () => {
-    const layer = mockLayer(
-      "2026-03-30T00:00:00Z,2026-03-30T03:00:00Z/2026-04-10T00:00:00Z/PT3H,2026-04-10T06:00:00Z/2026-04-14T00:00:00Z/PT6H"
+  test("falls back to the first style", () => {
+    expect(extractLegendUrl(layer, "unknown")).toBe(
+      "https://example.com/default.png"
     );
-    const result = extractTimestamps(layer);
-    expect(result.length).toBeGreaterThan(1);
-    expect(result).toContainEqual(
-      expect.stringContaining("2026-03-30T00:00:00")
+    expect(extractLegendUrl(layer, null)).toBe(
+      "https://example.com/default.png"
+    );
+  });
+
+  test("returns null without styles", () => {
+    expect(extractLegendUrl({}, "default")).toBeNull();
+  });
+});
+
+// ===========================================================================
+//  getWmsLayerInfo — integration with ogc-client
+// ===========================================================================
+
+describe("getWmsLayerInfo", () => {
+  const xml = capabilities(`
+    <Style>
+      <Name>default</Name>
+      <Title>Default</Title>
+      <LegendURL width="20" height="20">
+        <Format>image/png</Format>
+        <OnlineResource xlink:type="simple" xlink:href="https://example.com/legend.png"/>
+      </LegendURL>
+    </Style>
+    <Dimension name="time" units="ISO8601" default="2024-01-02T00:00:00Z">2024-01-01T00:00:00Z/2024-01-03T00:00:00Z/P1D</Dimension>`);
+
+  beforeEach(() => {
+    global.fetch = jest.fn(
+      async () =>
+        new Response(xml, { headers: { "Content-Type": "text/xml" } })
+    );
+  });
+
+  test("reads timestamps and legend of a nested layer", async () => {
+    expect(await getWmsLayerInfo(WMS_URL, "test", "default")).toEqual({
+      timestamps: [
+        "2024-01-01T00:00:00.000Z",
+        "2024-01-02T00:00:00.000Z",
+        "2024-01-03T00:00:00.000Z",
+      ],
+      legendUrl: "https://example.com/legend.png",
+    });
+  });
+
+  test("returns an empty object for an unknown layer", async () => {
+    expect(await getWmsLayerInfo(WMS_URL, "unknown")).toEqual({});
+  });
+
+  test("returns an empty object when the capabilities cannot be fetched", async () => {
+    jest.spyOn(console, "error").mockImplementation(() => {});
+    global.fetch = jest.fn(async () => {
+      throw new Error("network error");
+    });
+    expect(await getWmsLayerInfo("https://example.com/other", "test")).toEqual(
+      {}
     );
   });
 });
