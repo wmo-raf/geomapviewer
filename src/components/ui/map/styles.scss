@@ -1,5 +1,6 @@
 @import "@/styles/settings";
 @import "~maplibre-gl/dist/maplibre-gl.css";
+@import "@/styles/react-map-gl-compat.scss";
 
 .c-mapbox-map {
   position: relative;

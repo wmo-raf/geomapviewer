@@ -38,13 +38,20 @@ const getLegendLayerGroups = createSelector(
         group.layers.map((l) => {
           const timestampsForLayer = layerTimestamps[l.id];
 
+          const layerLegend = layerLegends && layerLegends[l.id];
+
           // Override legendConfig with image from GetCapabilities
-          const legendUrl = layerLegends && layerLegends[l.id];
-          if (legendUrl && l.legendConfig?.type === "wms_capabilities") {
+          if (layerLegend && l.legendConfig?.type === "wms_capabilities") {
             l.legendConfig = {
               type: "image",
-              imageUrl: legendUrl,
+              imageUrl: layerLegend,
             };
+          }
+
+          // Override legendConfig with the color scale the Open-Meteo
+          // protocol renders with
+          if (layerLegend && l.legendConfig?.type === "openmeteo") {
+            l.legendConfig = layerLegend;
           }
 
           if (l.paramsSelectorConfig) {

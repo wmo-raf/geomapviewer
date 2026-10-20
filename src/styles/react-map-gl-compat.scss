@@ -1,0 +1,159 @@
+// react-map-gl 5 renders its <Popup> (and checks the map stylesheet) with the
+// legacy `mapboxgl-` class names, which maplibre-gl >= 3 no longer styles.
+// Mirror the maplibre-gl popup rules on those class names.
+
+.mapboxgl-map {
+  font: 12px/20px Helvetica Neue,Arial,Helvetica,sans-serif;
+  overflow: hidden;
+  position: relative;
+  -webkit-tap-highlight-color: rgb(0 0 0/0);
+  -webkit-touch-callout: none;
+}
+
+.mapboxgl-popup {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.mapboxgl-popup-anchor-top,
+.mapboxgl-popup-anchor-top-left,
+.mapboxgl-popup-anchor-top-right {
+  flex-direction: column;
+}
+
+.mapboxgl-popup-anchor-bottom,
+.mapboxgl-popup-anchor-bottom-left,
+.mapboxgl-popup-anchor-bottom-right {
+  flex-direction: column-reverse;
+}
+
+.mapboxgl-popup-anchor-left {
+  flex-direction: row;
+}
+
+.mapboxgl-popup-anchor-right,
+[dir=rtl] .mapboxgl-popup-anchor-left {
+  flex-direction: row-reverse;
+}
+
+.mapboxgl-popup-tip {
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+  z-index: 1;
+}
+
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip {
+  align-self: center;
+  border-top: none;
+  border-bottom-color: #fff;
+}
+
+.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip {
+  align-self: flex-start;
+  border-top: none;
+  border-left: none;
+  border-bottom-color: #fff;
+}
+
+.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+  align-self: flex-end;
+  border-top: none;
+  border-right: none;
+  border-bottom-color: #fff;
+}
+
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+  align-self: center;
+  border-bottom: none;
+  border-top-color: #fff;
+}
+
+.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip {
+  align-self: flex-start;
+  border-bottom: none;
+  border-left: none;
+  border-top-color: #fff;
+}
+
+.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+  align-self: flex-end;
+  border-bottom: none;
+  border-right: none;
+  border-top-color: #fff;
+}
+
+.mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+  align-self: center;
+  border-left: none;
+  border-right-color: #fff;
+}
+
+.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+  align-self: center;
+  border-right: none;
+  border-left-color: #fff;
+}
+
+[dir=rtl] .mapboxgl-popup-anchor-right {
+  flex-direction: row;
+}
+
+[dir=rtl] .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip {
+  align-self: flex-end;
+}
+
+[dir=rtl] .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+  align-self: flex-start;
+}
+
+[dir=rtl] .mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip {
+  align-self: flex-end;
+}
+
+[dir=rtl] .mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+  align-self: flex-start;
+}
+
+.mapboxgl-popup-close-button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  border: 0;
+  border-radius: 0 3px 0 0;
+  cursor: pointer;
+  background-color: transparent;
+}
+
+.mapboxgl-popup-close-button:hover {
+  background-color: rgba(0,0,0,.05);
+}
+
+.mapboxgl-popup-content {
+  position: relative;
+  background: #fff;
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.1);
+  padding: 15px 10px;
+  pointer-events: auto;
+}
+
+.mapboxgl-popup-anchor-top-left .mapboxgl-popup-content {
+  border-top-left-radius: 0;
+}
+
+.mapboxgl-popup-anchor-top-right .mapboxgl-popup-content {
+  border-top-right-radius: 0;
+}
+
+.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-content {
+  border-bottom-left-radius: 0;
+}
+
+.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-content {
+  border-bottom-right-radius: 0;
+}
