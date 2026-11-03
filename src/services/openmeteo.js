@@ -25,14 +25,18 @@ const formatDay = (date) =>
     date.getUTCDate()
   )}`;
 
-// Path of the `.om` file holding one valid time of a model run:
-// {domain}/{YYYY}/{MM}/{DD}/{HH}00Z/{YYYY}-{MM}-{DD}T{HH}00.om
+const formatTime = (date) =>
+  `${pad(date.getUTCHours())}${pad(date.getUTCMinutes())}`;
+
+// Path of the `.om` file holding one valid time of a model run (minutes are
+// not always 00: 15-minute models have a file per quarter):
+// {domain}/{YYYY}/{MM}/{DD}/{HH}{mm}Z/{YYYY}-{MM}-{DD}T{HH}{mm}.om
 const getOmFilePath = (domain, referenceTime, validTime) =>
   [
     domain,
     formatDay(referenceTime).replace(/-/g, "/"),
-    `${pad(referenceTime.getUTCHours())}00Z`,
-    `${formatDay(validTime)}T${pad(validTime.getUTCHours())}00.om`,
+    `${formatTime(referenceTime)}Z`,
+    `${formatDay(validTime)}T${formatTime(validTime)}.om`,
   ].join("/");
 
 const toCssColor = ([r, g, b, a = 1]) => `rgba(${r}, ${g}, ${b}, ${a})`;
