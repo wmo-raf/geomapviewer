@@ -100,6 +100,23 @@ export function extractTimestamps(layer) {
   return parseTimeValues(timeValueStr);
 }
 
+/**
+ * Find a layer by name anywhere in the GetCapabilities layer tree.
+ * WMS layers can be nested at any depth (e.g. root > group > layer).
+ */
+export function findLayerByName(layer, layerName) {
+  if (!layer || !layerName) return null;
+
+  if (layer.Name === layerName) return layer;
+
+  for (const child of layer.Layer || []) {
+    const match = findLayerByName(child, layerName);
+    if (match) return match;
+  }
+
+  return null;
+}
+
 export function extractLegendUrl(layer, styleName) {
   const styles = layer?.Style || [];
   let style;

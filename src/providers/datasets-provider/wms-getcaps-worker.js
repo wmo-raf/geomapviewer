@@ -4,7 +4,11 @@ import WMSCapabilities from "wms-capabilities";
 import { get } from "axios";
 import { useCache } from "@camptocamp/ogc-client/dist/shared/cache.js";
 
-import { extractLegendUrl, extractTimestamps } from "@/utils/wms";
+import {
+  extractLegendUrl,
+  extractTimestamps,
+  findLayerByName,
+} from "@/utils/wms";
 
 async function fetchCapabilities(wmsUrl, params) {
   const response = await get(wmsUrl, { params: { ...params } });
@@ -25,8 +29,8 @@ const wmsGetLayerInfoFromCapabilities = async (
       wmsUrl
     );
 
-    const layers = capabilities?.Capability?.Layer?.Layer || [];
-    const match = layers.find((l) => l.Name === layerName) || {};
+    const match =
+      findLayerByName(capabilities?.Capability?.Layer, layerName) || {};
 
     const result = {};
 
