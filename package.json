@@ -53,7 +53,7 @@
     "final-form": "^4.20.9",
     "final-form-arrays": "^3.1.0",
     "hast-util-to-html": "^8.0.4",
-    "highcharts": "^10.3.3",
+    "highcharts": "^13.1.1",
     "highcharts-react-official": "^3.2.0",
     "image-trace-loader": "^1.0.2",
     "imagemin-mozjpeg": "8.0.0",
