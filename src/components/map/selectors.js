@@ -32,7 +32,7 @@ const selectLayersLoadingStatus = (state) =>
   state.datasets && state.datasets.layerLoadingStatus;
 
 const selectDatasetParams = (state) => state.datasets?.params;
-const selectCogUrls = (state) => state.datasets?.cogUrls || {};
+const selectLayerTimeUrls = (state) => state.datasets?.layerTimeUrls || {};
 const selectMapPrinting = (state) => state.map && state.map?.settings?.printing;
 const getMainMapSettings = (state) => state.mainMap || {};
 export const getBasemaps = (state) => state.config?.basemaps || {};
@@ -487,45 +487,58 @@ export const getLayersWithSettingsParams = createSelector(
   }
 );
 
-// Rewrite raster_cog layers to use a `cog://` raster source for the current
-// selected time. Coloring is handled client-side by setColorFunction, so the
-// render layer stays a vanilla raster layer with no special paint.
-export const getLayersWithCogSource = createSelector(
-  [getLayersWithSettingsParams, selectCogUrls],
-  (layers, cogUrls) => {
+// Maplibre protocol rendering the layer types whose source URL changes with the
+// selected time. Both color tiles client-side (raster_cog through
+// setColorFunction, openmeteo with its own color scales), so the render layer
+// stays a vanilla raster layer with no special paint.
+const TIME_URL_SOURCES = {
+  raster_cog: { protocol: "cog", tileSize: 256 },
+  // the protocol renders 512px tiles
+  openmeteo: { protocol: "om", tileSize: 512 },
+};
+
+// Rewrite those layers to use a `<protocol>://` raster source for the current
+// selected time.
+export const getLayersWithTimeUrlSource = createSelector(
+  [getLayersWithSettingsParams, selectLayerTimeUrls],
+  (layers, layerTimeUrls) => {
     if (isEmpty(layers)) return layers;
 
     return layers.map((l) => {
-      if (l.layerType !== "raster_cog") return l;
+      const timeUrlSource = TIME_URL_SOURCES[l.layerType];
+      if (!timeUrlSource) return l;
 
-      const urlsMap = cogUrls[l.id] || {};
+      const { protocol, tileSize } = timeUrlSource;
+      const urlsMap = layerTimeUrls[l.id] || {};
       const selectedTime = l?.params?.time;
-      const cogUrl =
+      const url =
         (selectedTime && urlsMap[selectedTime]) ||
         Object.values(urlsMap)[0] ||
         null;
 
       // Always hand layer-manager a valid `type: "raster"` source. The backend
-      // emits `source.type: "cog"`, which maplibre would reject. Until the
-      // TileJSON fetch resolves, emit an empty tiles array so layer-manager
-      // can add the (inert) source; once a cogUrl lands, this selector
-      // recomputes and layer-manager swaps in the real `cog://...` source.
-      const source = cogUrl
+      // emits a source type of its own (e.g. `cog`), which maplibre would
+      // reject. Until the time URLs fetch resolves, emit an empty tiles array
+      // so layer-manager can add the (inert) source; once a url lands, this
+      // selector recomputes and layer-manager swaps in the real source.
+      const source = url
         ? {
             type: "raster",
-            url: `cog://${cogUrl}`,
-            tileSize: 256,
+            url: `${protocol}://${url}`,
+            tileSize,
             parse: false,
           }
         : {
             type: "raster",
             tiles: [],
-            tileSize: 256,
+            tileSize,
             parse: false,
           };
 
       return {
         ...l,
+        // keep the inert source hidden: maplibre would request its tiles
+        ...(!url && { visibility: false }),
         layerConfig: {
           ...l.layerConfig,
           type: "raster",
@@ -538,7 +551,7 @@ export const getLayersWithCogSource = createSelector(
 
 // flatten datasets into layers for the layer manager
 export const getAllLayers = createSelector(
-  getLayersWithCogSource,
+  getLayersWithTimeUrlSource,
   (layers) => {
     if (isEmpty(layers)) return null;
 

@@ -1,5 +1,6 @@
 import { fetchUrlTimestamps } from "@/services/timestamps";
 import { fetchTileJson } from "@/services/raster-cog";
+import { fetchOpenMeteoTimeUrls } from "@/services/openmeteo";
 import { getNextDate, getPreviousDate } from "@/utils/time";
 
 import { POLITICAL_BOUNDARIES_DATASET } from "@/data/datasets";
@@ -70,13 +71,37 @@ const rasterCogUpdateProvider = (layer) => {
     autoUpdateInterval,
     settings = {},
     tileJsonUrl,
+    colorRamp,
   } = layer;
 
   const { autoUpdateActive = true } = settings;
 
   return {
     layer,
-    getTileJson: () => fetchTileJson(tileJsonUrl),
+    getTimeUrls: () => fetchTileJson(tileJsonUrl, colorRamp),
+    getCurrentLayerTime: (timestamps) => {
+      return getLayerTime(timestamps, currentTimeMethod);
+    },
+    ...(!!autoUpdateInterval &&
+      autoUpdateActive && {
+        updateInterval: autoUpdateInterval,
+      }),
+  };
+};
+
+const openMeteoUpdateProvider = (layer) => {
+  const {
+    currentTimeMethod,
+    autoUpdateInterval,
+    settings = {},
+    openMeteoConfig,
+  } = layer;
+
+  const { autoUpdateActive = true } = settings;
+
+  return {
+    layer,
+    getTimeUrls: () => fetchOpenMeteoTimeUrls(openMeteoConfig),
     getCurrentLayerTime: (timestamps) => {
       return getLayerTime(timestamps, currentTimeMethod);
     },
@@ -160,6 +185,9 @@ export const createUpdateProviders = (activeLayers) => {
         case "raster_cog":
           provider = rasterCogUpdateProvider(layer);
           break;
+        case "openmeteo":
+          provider = openMeteoUpdateProvider(layer);
+          break;
         case "wms":
           provider = wmsUpdateProvider(layer);
           break;
@@ -172,6 +200,8 @@ export const createUpdateProviders = (activeLayers) => {
       }
     } else if (!multiTemporal && layerType === "raster_cog") {
       provider = rasterCogUpdateProvider(layer);
+    } else if (!multiTemporal && layerType === "openmeteo") {
+      provider = openMeteoUpdateProvider(layer);
     } else if (!multiTemporal && layerType === "wms" && legendFromCapabilities) {
       provider = wmsUpdateProvider(layer);
     }

@@ -1,33 +1,12 @@
-import { PureComponent, createRef } from "react";
+import { PureComponent } from "react";
 import bbox from "@turf/bbox";
 import { isEmpty } from "lodash";
 import { connect } from "react-redux";
-import { wrap } from "comlink";
-import { setColorFunction } from "@geomatico/maplibre-cog-protocol";
 
 import * as ownActions from "./actions";
 import { getDatasetProps } from "./selectors";
 import { setMapSettings } from "@/components/map/actions";
 import { parseISO } from "date-fns";
-import { buildColorFunction } from "@/utils/color-ramp";
-
-const registeredCogColorUrls = new Set();
-
-const registerCogColorFunctions = (urlsMap, colorRamp) => {
-  if (!urlsMap || !colorRamp) return;
-  const fn = buildColorFunction(colorRamp);
-  if (!fn) return;
-  Object.values(urlsMap).forEach((cogUrl) => {
-    if (!cogUrl || registeredCogColorUrls.has(cogUrl)) return;
-    try {
-      setColorFunction(cogUrl, fn);
-      registeredCogColorUrls.add(cogUrl);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.warn("setColorFunction failed for", cogUrl, err);
-    }
-  });
-};
 
 const actions = {
   ...ownActions,
@@ -35,8 +14,6 @@ const actions = {
 };
 
 class LayerUpdate extends PureComponent {
-  wmsWorkerRef = createRef();
-
   componentDidMount() {
     const { updateInterval } = this.props;
     this.doUpdate({ isInitial: true });
@@ -45,14 +22,6 @@ class LayerUpdate extends PureComponent {
       this.interval = setInterval(() => this.doUpdate({}), updateInterval);
     }
   }
-
-  initWmsWorker = () => {
-    if (!this.wmsWorkerRef.current) {
-      this.wmsWorkerRef.current = wrap(
-        new Worker(new URL("./wms-getcaps-worker.js", import.meta.url))
-      );
-    }
-  };
 
   componentWillUnmount() {
     if (this.interval) {
@@ -70,21 +39,18 @@ class LayerUpdate extends PureComponent {
       styles,
     } = layer;
 
-    this.initWmsWorker();
+    const styleName = legendFromCapabilities && Array.isArray(styles)
+      ? styles.join(',')
+      : null;
 
-    if (this.wmsWorkerRef.current) {
-      const styleName = legendFromCapabilities && Array.isArray(styles)
-        ? styles.join(',')
-        : null;
+    // loaded on demand: ogc-client is only needed by WMS layers, in the browser
+    const { getWmsLayerInfo } = await import("@/utils/wms");
 
-      return await this.wmsWorkerRef.current.wmsGetLayerInfoFromCapabilities(
-        getCapabilitiesUrl,
-        getCapabilitiesLayerName || layerName,
-        styleName
-      );
-    }
-
-    return {};
+    return getWmsLayerInfo(
+      getCapabilitiesUrl,
+      getCapabilitiesLayerName || layerName,
+      styleName
+    );
   };
 
   processTimestamps = (timestamps) => {
@@ -134,11 +100,11 @@ class LayerUpdate extends PureComponent {
     const {
       layer,
       getTimestamps,
-      getTileJson,
+      getTimeUrls,
       getData,
       setMapSettings,
       setTimestamps,
-      setCogUrls,
+      setLayerTimeUrls,
       setLayerLegend,
       setGeojsonData,
       activeDatasets,
@@ -166,19 +132,23 @@ class LayerUpdate extends PureComponent {
       getLayerTimestamps = null;
     }
 
-    if (getTileJson && !(isMultiLayer && !isDefault)) {
-      console.log(`Updating layer : ${layerId}, fetching COG TileJSON`);
+    // layers whose source URL changes with the selected time (raster_cog, openmeteo)
+    if (getTimeUrls && !(isMultiLayer && !isDefault)) {
+      console.log(`Updating layer : ${layerId}, fetching time URLs`);
 
       setLayerUpdatingStatus({ [layerId]: true });
       if (isInitial) setLayerLoadingStatus({ [layerId]: true });
 
       try {
-        const tileJson = await getTileJson();
-        const urls = tileJson?.urls || {};
-        const timestamps = tileJson?.timestamps || [];
+        const timeUrls = await getTimeUrls();
+        const urls = timeUrls?.urls || {};
+        const timestamps = timeUrls?.timestamps || [];
 
-        setCogUrls({ [layerId]: urls });
-        registerCogColorFunctions(urls, layer.colorRamp);
+        setLayerTimeUrls({ [layerId]: urls });
+
+        if (timeUrls?.legendConfig) {
+          setLayerLegend({ [layerId]: timeUrls.legendConfig });
+        }
 
         if (multiTemporal) {
           this.processTimestamps(timestamps);
@@ -190,7 +160,7 @@ class LayerUpdate extends PureComponent {
         if (isInitial) setLayerLoadingStatus({ [layerId]: false });
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.error("raster_cog TileJSON fetch failed", err);
+        console.error(`${layerType} time URLs fetch failed`, err);
         setTimestamps({ [layerId]: [] });
         setLayerUpdatingStatus({ [layerId]: false });
         setLayerLoadingStatus({ [layerId]: false });

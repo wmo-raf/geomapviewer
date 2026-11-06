@@ -3,7 +3,7 @@
 ############################
 # Stage 1: Builder
 ############################
-FROM node:20-bookworm-slim AS builder
+FROM node:22-bookworm-slim AS builder
 
 RUN apt-get update && apt-get install -y \
     ca-certificates \
@@ -33,7 +33,7 @@ RUN yarn build
 ############################
 # Stage 2: Runtime
 ############################
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
 WORKDIR /app
 

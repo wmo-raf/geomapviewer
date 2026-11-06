@@ -4,7 +4,7 @@ import isEqual from "lodash/isEqual";
 import isEmpty from "lodash/isEmpty";
 import debounce from "lodash/debounce";
 import cx from "classnames";
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import { Protocol as PmtilesProtocol } from "pmtiles";
 import { cogProtocol } from "@geomatico/maplibre-cog-protocol";
 
@@ -297,8 +297,8 @@ class MapComponent extends Component {
         const { data, layer, geometry } = interaction;
         this.map
           .getSource(layer.id)
-          .getClusterExpansionZoom(data.cluster_id, (err, newZoom) => {
-            if (err) return;
+          .getClusterExpansionZoom(data.cluster_id)
+          .then((newZoom) => {
             const { coordinates } = geometry;
             const difference = Math.abs(viewport.zoom - newZoom);
             setMapSettings({
@@ -309,7 +309,8 @@ class MapComponent extends Component {
               zoom: newZoom,
               transitionDuration: 400 + difference * 100,
             });
-          });
+          })
+          .catch(() => {});
       }
     }
 
